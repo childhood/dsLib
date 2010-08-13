@@ -18,6 +18,27 @@ DESCRIPTION
 #include <ds_types.h>
 #include <graph.h>
 
+#define DEBUG_EDGE_PRINT_I(G,E)                                         \
+   do                                                                   \
+   {                                                                    \
+      if (G->type == GRAPH_UNDIRECTED_T)                                \
+      {                                                                 \
+         fprintf (stdout, "*edge (%s) v1=%lu v2=%lu\n",                 \
+                  (char*)E->aux,                                        \
+                  ((VTX_UD_T*)E->v1)->id.iid,                           \
+                  ((VTX_UD_T*)E->v2)->id.iid);                          \
+      }                                                                 \
+                                                                        \
+      if (G->type == GRAPH_DIRECTED_T)                                  \
+      {                                                                 \
+         fprintf (stdout, "*edge (%s) v1=%lu v2=%lu\n",                 \
+                  (char*)E->aux,                                        \
+                  ((VTX_D_T*)E->v1)->id.iid,                            \
+                  ((VTX_D_T*)E->v2)->id.iid);                           \
+      }                                                                 \
+                                                                        \
+   }while (0)
+
 
 /*******************************************************************************
 * vertex_insert - insert a vertext in the graph
@@ -51,7 +72,7 @@ static void vertex_print (GRAPH_T* g)
       VTX_UD_T* vtx = g->vLst;
       while (vtx)
       {
-         fprintf (stdout, "vertex %lu\n", vtx->id.iid);
+         vtx = vtx->next;
       }
    }   
    else if (g->type == GRAPH_DIRECTED_T)
@@ -59,10 +80,11 @@ static void vertex_print (GRAPH_T* g)
       VTX_D_T* vtx = g->vLst;
       while (vtx)
       {
-         fprintf (stdout, "vertex %lu\n", vtx->id.iid);
+         vtx = vtx->next;
       }
    }
 }
+
 
 /*******************************************************************************
 * vertex_insert - insert a vertext in the graph
@@ -70,39 +92,31 @@ static void vertex_print (GRAPH_T* g)
 * RETURNS: 
 */
 
-static GPH_ERR_E vertex_insert
+EDGE_T* vertex_next_edge_get
 (
 GRAPH_T* g,
-void* vtx
+void* v,
+char** saveptr
 )
 {
-   if (NULL == g)
-      return GPH_ERR_ERR;
-   
-   if (NULL == g->vLst)
+   printf ("%p\n", *saveptr);
+   if (g->type == GRAPH_UNDIRECTED_T)
    {
-      g->last_vertex = vtx;
-      g->vLst = vtx;
-   }
-   else
-   {
-      if (g->type == GRAPH_UNDIRECTED_T)
+      if (NULL == *saveptr)
       {
-         VTX_UD_T* lvtx = g->last_vertex;
-         lvtx->next = vtx;
-         lvtx = vtx;
+         *saveptr = (char*)((VTX_UD_T*)v)->ELst;
+         return ((VTX_UD_T*)v)->ELst->edge;
       }
-      if (g->type == GRAPH_DIRECTED_T)
+      else
       {
-         VTX_D_T* lvtx = g->last_vertex;
-         lvtx->next = vtx;
-         lvtx = vtx;
+         EDGE_T* e;
+         e = ((VTX_EDGE*)*saveptr)->edge;
+         *saveptr = (char*)((VTX_EDGE*)*saveptr)->next;
       }
    }
-   return GPH_ERR_OK;
 }
 
-
+   
 /*******************************************************************************
 * edge_remove - 
 *
@@ -110,7 +124,7 @@ void* vtx
 */
    
    static GPH_ERR_E vertex_remove
-    (
+      (
     GRAPH_T* g,
     void* vtx
     )
@@ -158,73 +172,6 @@ void* vtx
     }
 
 /*******************************************************************************
-* edge_insert - insert an edge in the graph
-*
-* RETURNS: 
-*/
-
-static GPH_ERR_E edge_insert
-(
-GRAPH_T* g,
-EDGE_T* edge
-)
-{
-   if (NULL == g)
-      return GPH_ERR_ERR;
-   
-   if (NULL == g->eLst)
-   {
-      g->last_edge = edge;
-      g->eLst = edge;
-       }
-   else
-   {
-      g->last_edge->next = edge;
-      g->last_edge = edge;
-   }
-   return GPH_ERR_OK;
-}
-
-/*******************************************************************************
-* edge_remove - 
-*
-* RETURNS: 
-*/
-
-static GPH_ERR_E edge_remove
-    (
-    GRAPH_T* g,
-    EDGE_T* edge
-    )
-    {
-       EDGE_T* iter_edge;
-       EDGE_T* prev_iter_edge = NULL;
-       EDGE_T* tmp_edge;
-       
-       iter_edge = g->eLst;
-       while (iter_edge)
-       {
-          if (iter_edge == edge)
-          {
-             if (NULL == prev_iter_edge)
-             {
-                tmp_edge = g->eLst;
-                g->eLst = g->eLst->next;
-                free (tmp_edge);
-             }
-             else
-             {
-                prev_iter_edge = iter_edge->next;
-                free (iter_edge);
-             }
-             break;
-          }
-          iter_edge = iter_edge->next;
-       }       
-       return GPH_ERR_OK;
-    }
-
-/*******************************************************************************
 * graph_vertex_find_next - 
 *
 * RETURNS: 
@@ -261,7 +208,10 @@ void* graph_vertex_find_i
       while (NULL != vtx)
       {
          if (vtx->id.iid == vid)
+         {
             return vtx;
+         }
+         vtx = vtx->next;
       }
    }
    
@@ -273,6 +223,7 @@ void* graph_vertex_find_i
       {
          if (vtx->id.iid == vid)
             return vtx;
+         vtx = vtx->next;
       }
    }
    return NULL;
@@ -333,19 +284,34 @@ void* v2
       return GPH_ERR_ERR;
    ve->edge = edge;
    ve->next = NULL;
-   
+
+   fprintf (stderr, "edding edge %p\n", edge);
    if (g->type == GRAPH_UNDIRECTED_T)
    {
       VTX_UD_T* vtx = v1;
-      
+
       if (NULL == vtx->ELst)
       {
          vtx->ELst = ve;
+         vtx->last_edge = ve;
       }
       else
       {
-         vtx->ELst->next = ve;
+         vtx->last_edge->next = ve;
+         vtx->last_edge = ve;
       }
+
+      vtx = v2;
+      if (NULL == vtx->ELst)
+      {
+         vtx->ELst = ve;
+         vtx->last_edge = ve;
+      }
+      else
+      {
+         vtx->last_edge->next = ve;
+         vtx->last_edge = ve;
+      }      
    }
    
    if (g->type == GRAPH_DIRECTED_T)
@@ -356,19 +322,61 @@ void* v2
       if (NULL == vtx1->outELst)
       {
          vtx1->outELst = ve;
+         vtx1->last_out_edge = ve;
       }
       else
       {
-         vtx1->outELst->next = ve;
+         vtx1->last_out_edge->next = ve;
+         vtx1->last_out_edge = ve;
       }
 
       if (NULL == vtx2->inELst)
       {
          vtx2->inELst = ve;
+         vtx2->last_in_edge = ve;
       }
       else
       {
-         vtx2->inELst->next = ve;
+         vtx2->last_in_edge->next = ve;
+         vtx2->last_in_edge = ve;
+      }
+   }
+   return GPH_ERR_OK;
+}
+
+/*******************************************************************************
+* vertex_insert - insert a vertext in the graph
+*
+* RETURNS: 
+*/
+
+static GPH_ERR_E vertex_insert
+(
+GRAPH_T* g,
+void* vtx
+)
+{
+   if (NULL == g)
+      return GPH_ERR_ERR;
+   
+   if (NULL == g->vLst)
+   {
+      g->last_vertex = vtx;
+      g->vLst = vtx;
+   }
+   else
+   {
+      if (g->type == GRAPH_UNDIRECTED_T)
+      {         
+         VTX_UD_T* lvtx = g->last_vertex;
+         lvtx->next = vtx;
+         g->last_vertex = vtx;
+      }
+      if (g->type == GRAPH_DIRECTED_T)
+      {
+         VTX_D_T* lvtx = g->last_vertex;
+         lvtx->next = vtx;
+         g->last_vertex = vtx;
       }
    }
    return GPH_ERR_OK;
@@ -388,6 +396,7 @@ static void* graph_v_create_i
     )
 {
    void* vtx;
+
    if (NULL != (vtx = graph_vertex_find_i (g, vid)))
        return vtx;
 
@@ -495,6 +504,45 @@ static GPH_ERR_E graph_v_remove_i
     }
 
 /*******************************************************************************
+* edge_remove - 
+*
+* RETURNS: 
+*/
+
+static GPH_ERR_E edge_remove
+(
+GRAPH_T* g,
+EDGE_T* edge
+)
+{
+   EDGE_T* iter_edge;
+   EDGE_T* prev_iter_edge = NULL;
+   EDGE_T* tmp_edge;
+   
+   iter_edge = g->eLst;
+   while (iter_edge)
+   {
+      if (iter_edge == edge)
+      {
+         if (NULL == prev_iter_edge)
+         {
+            tmp_edge = g->eLst;
+            g->eLst = g->eLst->next;
+            free (tmp_edge);
+         }
+         else
+         {
+            prev_iter_edge = iter_edge->next;
+            free (iter_edge);
+         }
+         break;
+      }
+      iter_edge = iter_edge->next;
+   }       
+   return GPH_ERR_OK;
+}
+
+/*******************************************************************************
 * graph_v_add_c - add a new 
 *
 * RETURNS: 
@@ -525,6 +573,35 @@ unsigned long v2       /* integer vertex identifier. */
 )
 {
    
+}
+
+
+/*******************************************************************************
+* edge_insert - insert an edge in the graph
+*
+* RETURNS: 
+*/
+
+static GPH_ERR_E edge_insert
+(
+GRAPH_T* g,
+EDGE_T* edge
+)
+{
+   if (NULL == g)
+      return GPH_ERR_ERR;
+   
+   if (NULL == g->eLst)
+   {
+      g->last_edge = edge;
+      g->eLst = edge;
+   }
+   else
+   {
+      g->last_edge->next = edge;
+      g->last_edge = edge;
+   }
+   return GPH_ERR_OK;
 }
 
 /*******************************************************************************
@@ -561,6 +638,7 @@ BOOL_E is_edge          /* are we inserting an edge or a stand-alone vertex */
    v1o = graph_v_create_i (g, v1, info);
    v2o = graph_v_create_i (g, v2, info);
 
+   e->next = NULL;
    e->v1 = v1o;
    e->v2 = v2o;
    e->weight = weight;
@@ -609,6 +687,7 @@ BOOL_E is_edge          /* are we inserting an edge or a stand-alone vertex */
    v1o = graph_v_create_c (g, v1, info);
    v2o = graph_v_create_c (g, v2, info);
 
+   e->next = NULL;   
    e->v1 = v1o;
    e->v2 = v2o;
    e->weight = weight;
@@ -668,6 +747,20 @@ graph_new_err:
 #define GRAPH_TEST
 
 #ifdef GRAPH_TEST
+
+static void vertex_print_2 (GRAPH_T* g)
+{
+   VTX_UD_T* vtx;
+   VTX_EDGE* ve;
+   
+   vtx = graph_vertex_find_i (g, 7);
+   ve = vtx->ELst;
+   while (ve)
+   {
+      printf ("%p\n", ve);
+   }
+}
+
 /*******************************************************************************
 * graph_main -
 *
@@ -680,20 +773,42 @@ graph_new_err:
 int graph_main (int argc, char** argv)
 {
    GRAPH_T* g;
-
+   void* vtx;
+   EDGE_T* e;
+   char* saveptr = NULL;
+   
    fprintf (stderr, "graph test #1\n");
-   g = graph_new (GRAPH_UNDIRECTED_T);   
+   g = graph_new (GRAPH_UNDIRECTED_T);
+   fprintf (stderr, "* inserting e1(1,2)\n");
    graph_add_i (g, "e1", 1, NULL, 2, NULL, 1, DS_TRUE);
-   graph_add_i (g, "e2", 1, NULL, 5, NULL, 1, DS_TRUE);   
+   fprintf (stderr, "* inserting e2(1,5)\n");   
+   graph_add_i (g, "e2", 1, NULL, 5, NULL, 1, DS_TRUE);
+   fprintf (stderr, "* inserting e3(2,6)\n");      
    graph_add_i (g, "e3", 2, NULL, 6, NULL, 1, DS_TRUE);
-   graph_add_i (g, "e4", 6, NULL, 7, NULL, 1, DS_TRUE);   
+   fprintf (stderr, "* inserting e4(6,7)\n");         
+   graph_add_i (g, "e4", 6, NULL, 7, NULL, 1, DS_TRUE);
+   fprintf (stderr, "* inserting e5(3,7)\n");            
    graph_add_i (g, "e5", 3, NULL, 7, NULL, 1, DS_TRUE);
+   fprintf (stderr, "* inserting e6(3,4)\n");            
    graph_add_i (g, "e6", 3, NULL, 4, NULL, 1, DS_TRUE);
+   fprintf (stderr, "* inserting e7(7,8)\n");            
    graph_add_i (g, "e7", 7, NULL, 8, NULL, 1, DS_TRUE);
+   fprintf (stderr, "* inserting e8(4,8)\n");            
    graph_add_i (g, "e8", 4, NULL, 8, NULL, 1, DS_TRUE);
+   fprintf (stderr, "* inserting e9(6,3)\n");               
    graph_add_i (g, "e9", 6, NULL, 3, NULL, 1, DS_TRUE);
-   graph_add_i (g, "e10", 7, NULL, 4, NULL, 1, DS_TRUE);   
+   fprintf (stderr, "* inserting e10(7,4)\n");               
+   graph_add_i (g, "e10", 7, NULL, 4, NULL, 1, DS_TRUE);
+   fprintf (stderr, "Done inserting edges\n");
    edge_print (g);
    vertex_print (g);
+
+   vertex_print_2 (g);
+   vtx = graph_vertex_find_i (g, 7);
+   e = vertex_next_edge_get (g, vtx, &saveptr);
+   DEBUG_EDGE_PRINT_I(g,e);
+   e = vertex_next_edge_get (g, vtx, &saveptr);
+   DEBUG_EDGE_PRINT_I(g,e);
+
 }
 #endif

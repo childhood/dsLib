@@ -11,6 +11,11 @@ typedef enum {
    GRAPH_UNDIRECTED_T=1
 }GRAPH_TYPE_E;
 
+typedef enum {
+   GRAPH_INT_T=0,
+   GRAPH_CHAR_T=1
+}GRAPH_LABEL_E;
+
 /* vertex identifier */
 typedef union
     {        
@@ -49,6 +54,8 @@ typedef struct _dsvtxd {
    unsigned long no;   /* total number of edges incident on the vertex */
    void* aux;          /* auxilliary data to attach to the vertex */
    VTXID_U id;         /* vertex identifier */
+   VTX_EDGE* last_out_edge;
+   VTX_EDGE* last_in_edge;
 }VTX_D_T;
 
 /* vertex node for an un-directed graph */
@@ -58,6 +65,7 @@ typedef struct _dsvtxud {
    unsigned long no;   /* total number of edges incident on the vertex */
    void* aux;          /* auxilliary data to attach to the vertex */
    VTXID_U id;         /* vertex identifier */
+   VTX_EDGE* last_edge;
 }VTX_UD_T;
 
 /* A graph */
@@ -71,6 +79,7 @@ typedef struct _dsgraph {
    GRAPH_TYPE_E type;
    EDGE_T* last_edge;
    void* last_vertex;
+   GRAPH_LABEL_E label_type;
 }GRAPH_T;
 
 /* graph operation result code  */
