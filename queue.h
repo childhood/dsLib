@@ -10,8 +10,10 @@ Modification History
 #ifndef DS_QUEUE_H
 #define DS_QUEUE_H
 
-#define QUEUE_DEPTH(Q)  ((Q)->cur_size)
-#define QUEUE_SIZE(Q)   ((Q)->max_size)
+#define QUEUE_DEPTH(Q)          ((Q)->cur_size)
+#define QUEUE_SIZE(Q)           ((Q)->max_size)
+#define QUEUE_IS_EMPTY(Q)       ((Q)->cur_size)?DS_FALSE:DS_TRUE
+#define QUEUE_IS_FULL(Q)        ((Q)->cur_size==(Q)->max_size)?DS_TRUE:DS_FALSE
 
 typedef enum {
    Q_ERR_ERROR_HIGH = -512, /* fencepost */

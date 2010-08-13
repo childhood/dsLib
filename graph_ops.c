@@ -1,6 +1,9 @@
 
 
-void bfs (GRAPH_T*g)
+void bfs
+(
+GRAPH_T* g
+)
 {
 
 }

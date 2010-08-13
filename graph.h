@@ -26,45 +26,52 @@ typedef union
     }EDGID_U;
 
 /* edge node */
-typedef struct _dsedge
-    {
-    void* v1;            /* edge vertex #1 */
-    void* v2;            /* edge vertext #2 */
-    unsigned long weight;/* edge weight */
-    void* aux;           /* auxilliary data to attach to the vertex */
-    EDGID_U id;              /* edge identifier */
-    }EDGE_T;
+typedef struct _dsedge {
+   struct _dsedge* next;/* next edge in the list */
+   void* v1;            /* edge vertex #1 */
+   void* v2;            /* edge vertext #2 */
+   unsigned long weight;/* edge weight */
+   void* aux;           /* auxilliary data to attach to the vertex */
+   EDGID_U id;              /* edge identifier */
+}EDGE_T;
+
+/* list for list of edges incident on a node */
+typedef struct _vtxedge {
+   struct _vtxedge* next;
+   EDGE_T* edge;   
+} VTX_EDGE;
 
 /* vertex node for a directed graph */
-typedef struct _dsvtxd
-    {
-    void* outELst;      /* list of outward directed edges incident on the vertex */
-    void* inELst;       /* list of inward directed edges incident on the vertex */
-    unsigned long no;   /* total number of edges incident on the vertex */
-    void* aux;          /* auxilliary data to attach to the vertex */
-    VTXID_U id;         /* vertex identifier */
+typedef struct _dsvtxd {
+   struct _dsvtxd* next; /* next vertex in the list */
+   VTX_EDGE* outELst;  /* list of outward directed edges incident on the vertex */
+   VTX_EDGE* inELst;   /* list of inward directed edges incident on the vertex */
+   unsigned long no;   /* total number of edges incident on the vertex */
+   void* aux;          /* auxilliary data to attach to the vertex */
+   VTXID_U id;         /* vertex identifier */
 }VTX_D_T;
 
 /* vertex node for an un-directed graph */
-typedef struct _dsvtxud
-    {
-    void* ELst;         /* list of edges incident on the vertex */
-    unsigned long no;   /* total number of edges incident on the vertex */
-    void* aux;          /* auxilliary data to attach to the vertex */
-    VTXID_U id;         /* vertex identifier */
-    }VTX_UD_T;
+typedef struct _dsvtxud {
+   struct _dsvtxud* next; /* next vertex in the list */
+   VTX_EDGE* ELst;     /* list of edges incident on the vertex */
+   unsigned long no;   /* total number of edges incident on the vertex */
+   void* aux;          /* auxilliary data to attach to the vertex */
+   VTXID_U id;         /* vertex identifier */
+}VTX_UD_T;
 
 /* A graph */
-typedef struct _dsgraph
-    {
-    SLL_T* eLst;         /* list of edges in the graph */
-    SLL_T* vLst;         /* list of vertices in the graph */
-    unsigned long v_no;  /* total number of vertices in the graph */
-    unsigned long e_no;  /* total number of edges in the graph */
-    VTXID_U last_vid;
-    EDGID_U last_eid;
-    GRAPH_TYPE_E type;
-    }GRAPH_T;
+typedef struct _dsgraph {
+   EDGE_T* eLst;       /* list of edges in the graph */
+   void* vLst;         /* list of vertices in the graph */
+   unsigned long v_no; /* total number of vertices in the graph */
+   unsigned long e_no; /* total number of edges in the graph */
+   VTXID_U last_vid;
+   EDGID_U last_eid;
+   GRAPH_TYPE_E type;
+   EDGE_T* last_edge;
+   void* last_vertex;
+}GRAPH_T;
 
 /* graph operation result code  */
 typedef enum {

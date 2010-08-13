@@ -15,7 +15,7 @@ DESCRIPTION
 #include <string.h>
 #include <stdlib.h>
 
-#include <sll.h>
+#include <ds_types.h>
 #include <graph.h>
 
 
@@ -24,18 +24,16 @@ DESCRIPTION
 *
 * RETURNS: 
 */
-static edge_print (GRAPH_T* g)
+
+static void edge_print (GRAPH_T* g)
 {
-   SLL_T* eLst;
-   SLL_NODE* node;
-   
-   node = g->eLst->lhead;
+   EDGE_T* node = g->eLst;
    while (node)
    {
       fprintf (stdout, "edge (%s) v1=%lu v2=%lu\n",
-               (char*)((EDGE_T*)(node->FVPDATA))->aux,
-               ((VTX_UD_T*)((EDGE_T*)node->FVPDATA)->v1)->id.iid,
-               ((VTX_UD_T*)((EDGE_T*)node->FVPDATA)->v2)->id.iid);
+               (char*)node->aux, 
+               ((VTX_UD_T*)node->v1)->id.iid,
+               ((VTX_UD_T*)node->v2)->id.iid);
       node = node->next;
    }
 }
@@ -45,17 +43,24 @@ static edge_print (GRAPH_T* g)
 *
 * RETURNS: 
 */
-static vertex_print (GRAPH_T* g)
+
+static void vertex_print (GRAPH_T* g)
 {
-   SLL_T* eLst;
-   SLL_NODE* node;
-   
-   node = g->vLst->lhead;
-   while (node)
+   if (g->type == GRAPH_UNDIRECTED_T)
    {
-      fprintf (stdout, "vertex %lu\n",
-               ((VTX_UD_T*)(node->FVPDATA))->id.iid);
-      node = node->next;
+      VTX_UD_T* vtx = g->vLst;
+      while (vtx)
+      {
+         fprintf (stdout, "vertex %lu\n", vtx->id.iid);
+      }
+   }   
+   else if (g->type == GRAPH_DIRECTED_T)
+   {
+      VTX_D_T* vtx = g->vLst;
+      while (vtx)
+      {
+         fprintf (stdout, "vertex %lu\n", vtx->id.iid);
+      }
    }
 }
 
@@ -66,14 +71,90 @@ static vertex_print (GRAPH_T* g)
 */
 
 static GPH_ERR_E vertex_insert
+(
+GRAPH_T* g,
+void* vtx
+)
+{
+   if (NULL == g)
+      return GPH_ERR_ERR;
+   
+   if (NULL == g->vLst)
+   {
+      g->last_vertex = vtx;
+      g->vLst = vtx;
+   }
+   else
+   {
+      if (g->type == GRAPH_UNDIRECTED_T)
+      {
+         VTX_UD_T* lvtx = g->last_vertex;
+         lvtx->next = vtx;
+         lvtx = vtx;
+      }
+      if (g->type == GRAPH_DIRECTED_T)
+      {
+         VTX_D_T* lvtx = g->last_vertex;
+         lvtx->next = vtx;
+         lvtx = vtx;
+      }
+   }
+   return GPH_ERR_OK;
+}
+
+
+/*******************************************************************************
+* edge_remove - 
+*
+* RETURNS: 
+*/
+   
+   static GPH_ERR_E vertex_remove
     (
     GRAPH_T* g,
     void* vtx
     )
-    {
-    if (SLL_ERR_OK != sll_insert (g->vLst, vtx))
-        return GPH_ERR_ERR;
-    return GPH_ERR_OK;
+{
+       void* iter_vtx;
+       void* prev_iter_vtx = NULL;
+       void* tmp_vtx;
+       
+       iter_vtx = g->eLst;
+       while (iter_vtx)
+       {
+          if (iter_vtx == vtx)
+          {
+             if (NULL == prev_iter_vtx)
+             {
+                tmp_vtx = g->eLst;
+                g->eLst = g->eLst->next;
+                free (tmp_vtx);
+             }
+             else
+             {
+                if (g->type == GRAPH_UNDIRECTED_T)
+                {
+                   prev_iter_vtx = ((VTX_UD_T*)iter_vtx)->next;
+                   free (iter_vtx);
+                }
+                if (g->type == GRAPH_DIRECTED_T)
+                {
+                   prev_iter_vtx = ((VTX_D_T*)iter_vtx)->next;
+                   free (iter_vtx);
+                }
+             }
+             break;
+          }
+          if (g->type == GRAPH_UNDIRECTED_T)
+          {
+             iter_vtx = ((VTX_UD_T*)iter_vtx)->next;
+          }
+          if (g->type == GRAPH_DIRECTED_T)
+          {
+             iter_vtx = ((VTX_D_T*)iter_vtx)->next;
+          }
+       }       
+       return GPH_ERR_OK;
     }
 
 /*******************************************************************************
@@ -83,15 +164,26 @@ static GPH_ERR_E vertex_insert
 */
 
 static GPH_ERR_E edge_insert
-    (
-    GRAPH_T* g,
-    EDGE_T* edge
-    )
-    {
-       if (SLL_ERR_OK != sll_insert (g->eLst, edge))
-          return GPH_ERR_ERR;
-       return GPH_ERR_OK;
-    }
+(
+GRAPH_T* g,
+EDGE_T* edge
+)
+{
+   if (NULL == g)
+      return GPH_ERR_ERR;
+   
+   if (NULL == g->eLst)
+   {
+      g->last_edge = edge;
+      g->eLst = edge;
+       }
+   else
+   {
+      g->last_edge->next = edge;
+      g->last_edge = edge;
+   }
+   return GPH_ERR_OK;
+}
 
 /*******************************************************************************
 * edge_remove - 
@@ -105,10 +197,50 @@ static GPH_ERR_E edge_remove
     EDGE_T* edge
     )
     {
-       if (SLL_ERR_OK != sll_delete (g->eLst, edge))
-          return GPH_ERR_ERR;
+       EDGE_T* iter_edge;
+       EDGE_T* prev_iter_edge = NULL;
+       EDGE_T* tmp_edge;
+       
+       iter_edge = g->eLst;
+       while (iter_edge)
+       {
+          if (iter_edge == edge)
+          {
+             if (NULL == prev_iter_edge)
+             {
+                tmp_edge = g->eLst;
+                g->eLst = g->eLst->next;
+                free (tmp_edge);
+             }
+             else
+             {
+                prev_iter_edge = iter_edge->next;
+                free (iter_edge);
+             }
+             break;
+          }
+          iter_edge = iter_edge->next;
+       }       
        return GPH_ERR_OK;
     }
+
+/*******************************************************************************
+* graph_vertex_find_next - 
+*
+* RETURNS: 
+*/
+
+void* graph_vertex_next_get
+    (
+    GRAPH_T* g,
+    void* vtx
+    )
+{
+   if (g->type == GRAPH_UNDIRECTED_T)
+      return ((VTX_UD_T*)vtx)->next;
+   else if (g->type == GRAPH_DIRECTED_T)
+      return ((VTX_D_T*)vtx)->next;   
+}
 
 /*******************************************************************************
 * graph_vertex_find_i - 
@@ -122,23 +254,25 @@ void* graph_vertex_find_i
     unsigned long vid
     )
 {
-   SLL_NODE* node = NULL;
-   
    if (g->type == GRAPH_UNDIRECTED_T)
    {
-      while (NULL != (node = sll_next_get (g->vLst, node)))
+      VTX_UD_T* vtx = g->vLst;
+      
+      while (NULL != vtx)
       {
-         if (((VTX_UD_T*)node->FVPDATA)->id.iid == vid)
-            return node->FVPDATA;
+         if (vtx->id.iid == vid)
+            return vtx;
       }
    }
    
    if (g->type == GRAPH_DIRECTED_T)
    {
-      while (NULL != (node = sll_next_get (g->vLst, node)))
+      VTX_D_T* vtx = g->vLst;
+      
+      while (NULL != vtx)
       {
-         if (((VTX_D_T*)node->FVPDATA)->id.iid == vid)
-            return node->FVPDATA;
+         if (vtx->id.iid == vid)
+            return vtx;
       }
    }
    return NULL;
@@ -156,26 +290,26 @@ void* graph_vertex_find_c
     char* vid
     )
 {
-   SLL_NODE* node = NULL;
-   
    if (g->type == GRAPH_UNDIRECTED_T)
    {
-      while (NULL != (node = sll_next_get (g->vLst, node)))
+      VTX_UD_T* vtx = g->vLst;
+      while (NULL != vtx)
       {
-         if (strcmp (((VTX_UD_T*)node->FVPDATA)->id.cid, vid))
-            return node->FVPDATA;
+         if (strcmp (vtx->id.cid, vid))
+            return vtx;
       }
    }
    
    if (g->type == GRAPH_DIRECTED_T)
    {
-      while (NULL != (node = sll_next_get (g->vLst, node)))
+      VTX_D_T* vtx = g->vLst;
+      while (NULL != vtx)
       {
-         if (strcmp (((VTX_D_T*)node->FVPDATA)->id.cid, vid))
-            return node->FVPDATA;
+         if (strcmp (vtx->id.cid, vid))
+            return vtx;
       }
    }
-return NULL;
+   return NULL;
 }
 
 /*******************************************************************************
@@ -185,24 +319,58 @@ return NULL;
 */
 
 static GPH_ERR_E graph_add_edge_to_vertices
-    (
-    GRAPH_T* g,
-    EDGE_T* edge,    
-    void* v1,
-    void* v2
-    )
+(
+GRAPH_T* g,
+EDGE_T* edge,    
+void* v1,
+void* v2
+)
 {
+   VTX_EDGE* ve;
+   
+   ve = malloc (sizeof (VTX_EDGE));
+   if (NULL == ve)
+      return GPH_ERR_ERR;
+   ve->edge = edge;
+   ve->next = NULL;
+   
    if (g->type == GRAPH_UNDIRECTED_T)
    {
-      sll_insert (((VTX_UD_T*)v1)->ELst, edge);
+      VTX_UD_T* vtx = v1;
+      
+      if (NULL == vtx->ELst)
+      {
+         vtx->ELst = ve;
+      }
+      else
+      {
+         vtx->ELst->next = ve;
+      }
    }
    
    if (g->type == GRAPH_DIRECTED_T)
    {
-      sll_insert (((VTX_D_T*)v1)->outELst, edge);
-      sll_insert (((VTX_D_T*)v2)->inELst, edge);
-   }
+      VTX_D_T* vtx1 = v1;
+      VTX_D_T* vtx2 = v2;
+      
+      if (NULL == vtx1->outELst)
+      {
+         vtx1->outELst = ve;
+      }
+      else
+      {
+         vtx1->outELst->next = ve;
+      }
 
+      if (NULL == vtx2->inELst)
+      {
+         vtx2->inELst = ve;
+      }
+      else
+      {
+         vtx2->inELst->next = ve;
+      }
+   }
    return GPH_ERR_OK;
 }
 
@@ -229,11 +397,8 @@ static void* graph_v_create_i
       
       if (NULL == (vtx = malloc (sizeof (VTX_UD_T))))
          return NULL;
-      if (NULL == (vtx->ELst = sll_new (VPDATA, NULL, NULL, NULL)))
-      {
-         free (vtx);
-         return NULL;
-      }
+      vtx->ELst = NULL; 
+      vtx->next = NULL;
       vtx->no = 0;
       vtx->id.iid = vid;
       vtx->aux = info;
@@ -246,14 +411,10 @@ static void* graph_v_create_i
       VTX_D_T* vtx;
       if (NULL == (vtx = malloc (sizeof (VTX_UD_T))))
          return NULL;
-      if (NULL == (vtx->outELst = sll_new (VPDATA, NULL, NULL, NULL)))
-      {
-         free (vtx); return NULL;
-      }
-      if (NULL == (vtx->inELst = sll_new (VPDATA, NULL, NULL, NULL)))
-      {
-         free (vtx); free (vtx->outELst); return NULL;
-      }
+
+      vtx->outELst = NULL;
+      vtx->inELst = NULL;
+      vtx->next = NULL;
       vtx->no = 0;
       vtx->id.iid = vid;
       vtx->aux = info;
@@ -289,11 +450,8 @@ void* info
       
       if (NULL == (vtx = malloc (sizeof (VTX_UD_T))))
          return NULL;
-      if (NULL == (vtx->ELst = sll_new (VPDATA, NULL, NULL, NULL)))
-      {
-         free (vtx);
-         return NULL;
-      }
+      vtx->ELst = NULL;
+      vtx->next = NULL;
       vtx->no = 0;
       vtx->id.cid = malloc (strlen (v) + 1);
       strcpy (vtx->id.cid, v);
@@ -307,14 +465,10 @@ void* info
       VTX_D_T* vtx;
       if (NULL == (vtx = malloc (sizeof (VTX_UD_T))))
          return NULL;
-      if (NULL == (vtx->outELst = sll_new (VPDATA, NULL, NULL, NULL)))
-      {
-         free (vtx); return NULL;
-      }
-      if (NULL == (vtx->inELst = sll_new (VPDATA, NULL, NULL, NULL)))
-      {
-         free (vtx); free (vtx->outELst); return NULL;
-      }
+      
+      vtx->outELst = NULL;
+      vtx->inELst = NULL;
+      vtx->next = NULL;
       vtx->no = 0;
       vtx->id.cid = malloc (strlen (v) + 1);
       strcpy (vtx->id.cid, v);
@@ -493,10 +647,8 @@ GRAPH_T* graph_new (GRAPH_TYPE_E type)
     
     if (NULL == (gph = malloc (sizeof (GRAPH_T))))
         goto graph_new_err;
-    if (NULL == (gph->eLst = sll_new (VPDATA, NULL, NULL, NULL)))
-        goto graph_new_err;        
-    if (NULL == (gph->vLst = sll_new (VPDATA, NULL, NULL, NULL)))
-        goto graph_new_err;
+    gph->eLst = NULL;
+    gph->vLst = NULL;
     gph->v_no = 0;
     gph->e_no = 0;
     gph->type = type;
