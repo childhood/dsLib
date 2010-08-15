@@ -37,7 +37,8 @@ typedef struct _dsedge {
    void* v2;            /* edge vertext #2 */
    unsigned long weight;/* edge weight */
    void* aux;           /* auxilliary data to attach to the vertex */
-   EDGID_U id;              /* edge identifier */
+   char label[128];     /* textual edge label */
+   EDGID_U id;          /* edge identifier */
 }EDGE_T;
 
 /* list for list of edges incident on a node */
@@ -89,6 +90,59 @@ typedef enum {
    GPH_ERR_EDGE_ADD_FAIL,
    GPH_ERR_ERR = -1,            /* generic operational error */
    GPH_ERR_OK = 0,              /* routine returned without any errors */
-   GPH_ERR_VERTEX_EXISTS = 1   
+   GPH_ERR_EDGE_EXISTS = 1,
+   GPH_ERR_VERTEX_EXISTS = 2   
 } GPH_ERR_E;
 
+
+#define DEBUG_EDGE_PRINT_I(G,E)                                         \
+   do                                                                   \
+   {                                                                    \
+      if (G->type == GRAPH_UNDIRECTED_T)                                \
+      {                                                                 \
+         fprintf (stdout, "*edge (%s) v1=%lu v2=%lu\n",                 \
+                  (char*)E->aux,                                        \
+                  ((VTX_UD_T*)E->v1)->id.iid,                           \
+                  ((VTX_UD_T*)E->v2)->id.iid);                          \
+      }                                                                 \
+                                                                        \
+      if (G->type == GRAPH_DIRECTED_T)                                  \
+      {                                                                 \
+         fprintf (stdout, "*edge (%s) v1=%lu v2=%lu\n",                 \
+                  (char*)E->aux,                                        \
+                  ((VTX_D_T*)E->v1)->id.iid,                            \
+                  ((VTX_D_T*)E->v2)->id.iid);                           \
+      }                                                                 \
+                                                                        \
+   }while (0)
+
+#define DEBUG_EDGE_PRINT_C(G,E)                                         \
+   do                                                                   \
+   {                                                                    \
+      if (G->type == GRAPH_UNDIRECTED_T)                                \
+      {                                                                 \
+         fprintf (stdout, "*edge (%s) v1=%s v2=%s\n",                   \
+                  (char*)E->aux,                                        \
+                  ((VTX_UD_T*)E->v1)->id.cid,                           \
+                  ((VTX_UD_T*)E->v2)->id.cid);                          \
+      }                                                                 \
+                                                                        \
+      if (G->type == GRAPH_DIRECTED_T)                                  \
+      {                                                                 \
+         fprintf (stdout, "*edge (%s) v1=%s v2=%s\n",                   \
+                  (char*)E->aux,                                        \
+                  ((VTX_D_T*)E->v1)->id.cid,                            \
+                  ((VTX_D_T*)E->v2)->id.cid);                           \
+      }                                                                 \
+                                                                        \
+   }while (0)
+
+
+EDGE_T* vertex_next_edge_get (GRAPH_T* g, void* v, char** saveptr);
+GRAPH_T* graph_new (GRAPH_TYPE_E type, GRAPH_LABEL_E label_id_type);
+GPH_ERR_E graph_add_i (GRAPH_T* g, void* info, unsigned long v1,
+                       void* v1_info, unsigned long v2, void* v2_info,
+                       unsigned int weight, BOOL_E is_edge);    
+void* graph_vertex_find_i (GRAPH_T* g, unsigned long vid);
+void graph_edge_print (GRAPH_T* g);
+void graph_vertex_print (GRAPH_T* g);

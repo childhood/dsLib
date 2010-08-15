@@ -9,9 +9,10 @@ DEFS =
 STATIC = 
 LDFLAGS =  $(STATIC)
 TARGET = libds.a
-OUTDIR=obj
+ARCH	:= $(shell uname -m)
+OUTDIR	:= $(ARCH)
 
-DS_OBJS = sll.o ds.o graph.o heap.o queue.o
+DS_OBJS = sll.o ds.o graph.o heap.o queue.o graph_ops.o
 ALGO_OBJS = is_sort.o
 
 all: $(TARGET)
