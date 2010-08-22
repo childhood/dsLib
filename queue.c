@@ -27,6 +27,48 @@ DESCRIPTION
 * RETURNS: 
 */
 
+TRUTH_E queue_is_empty
+(
+QUEUE_T* q
+)
+{
+   if (0 == q->cur_size)
+   {
+      return DS_YES;
+   }
+   return DS_NO;
+}
+
+/*******************************************************************************
+* queue_dequeue_vp - create a queue of void* data elements
+*
+* ARGUMENTS:
+*  <size> - size of queue
+*            
+* RETURNS: 
+*/
+
+TRUTH_E queue_is_full
+(
+QUEUE_T* q
+)
+{
+   if (q->max_size == q->cur_size)
+   {
+      return DS_YES;
+   }
+   return DS_NO;
+}
+
+/*******************************************************************************
+* queue_dequeue_vp - create a queue of void* data elements
+*
+* ARGUMENTS:
+*  <size> - size of queue
+*            
+* RETURNS: 
+*/
+
 void* queue_dequeue_vp
 (
 QUEUE_T* q,
