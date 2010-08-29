@@ -11,6 +11,48 @@
 #include <graph_ops.h>
 
 /**
+ *
+ */
+
+GPH_ERR_E graphviz_description
+(
+GRAPH_T* g,
+char* filename
+)
+{
+   EDGE_T* e = NULL;
+   void* v;
+   FILE* fp;
+
+   if (NULL == filename)
+   {
+      //return GPH_ERR_ERR;
+      fp = stderr;
+   }
+   else
+   {
+      fp = fopen (filename, "w");
+      fprintf (stderr, "%p", fp);
+      if (NULL == fp)
+         return GPH_ERR_ERR;
+   }
+   
+   fprintf (fp, "graph G {\n");
+   fprintf (fp, "node [shape = circle, style=filled];\n");
+   fprintf (fp, "rankdir=LR;\n");
+   fprintf (fp, "size=\"12,8\"\n");   
+   while (NULL != (e = graph_edge_next_get (g, e)))
+   {
+      fprintf (fp, "\t%lu -- %lu;\n", ((VTX_UD_T*)e->v1)->id.iid,
+               ((VTX_UD_T*)e->v2)->id.iid);
+   }
+   fprintf (fp, "}\n");
+
+   if (NULL != filename)
+      fclose (fp);
+}
+
+/**
  * This routine creates an NxM graph and returns it to the user.
  *
  * @param [in] N the number of rows in the matrix
@@ -33,20 +75,20 @@ GRAPH_T* matrix_create
         return NULL;
     
     for (vid = 1; vid <= N*M; vid++) /**< generate integer vertex indices */
-        {
-        /**< creating the left edge */
-        if (vid%M != 1)               
-            graph_add_i (matrix, label, vid, NULL, vid-1, NULL, 1, DS_TRUE);
-        /**< creating the right edge */
-        if (vid%M != 0)
-            graph_add_i (matrix, label, vid, NULL, vid+1, NULL, 1, DS_TRUE);
+    {
+       /**< creating the left-right edges */
+       if (vid%M != 1)               
+          graph_add_i (matrix, label, vid, NULL, vid-1, NULL, 1, DS_TRUE);
+       /**< creating the right edge */
+       //if (vid%M != 0)
+       // graph_add_i (matrix, label, vid, NULL, vid+1, NULL, 1, DS_TRUE);
         /**< creating the up edge */
-        if (vid > M)
-            graph_add_i (matrix, label, vid, NULL, vid-M, NULL, 1, DS_TRUE);
-        /**< creating the down edge */
-        if (vid <= (M*(N-1)))
-            graph_add_i (matrix, label, vid, NULL, vid+M, NULL, 1, DS_TRUE);        
-        }
+       //if (vid > M)
+       // graph_add_i (matrix, label, vid, NULL, vid-M, NULL, 1, DS_TRUE);
+       /**< creating the up-down edge */
+       if (vid <= (M*(N-1)))
+          graph_add_i (matrix, label, vid, NULL, vid+M, NULL, 1, DS_TRUE);        
+    }
     return matrix;
     }
 

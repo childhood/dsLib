@@ -1,22 +1,54 @@
-/* graph.c - directed and undirected graph lib */
-
-/*
-modification history
---------------------
-05aug10,gnm written
-*/
-
-/*
-DESCRIPTION
-
-*/
-
+/*!
+ *
+ */
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
 #include <ds_types.h>
 #include <graph.h>
+
+/*!
+ * This
+ *
+ */
+GRAPH_T* graph_duplicate
+(
+GRAPH_T* g
+)
+{
+   GRAPH_T* dup_g;
+
+   if (NULL == (dup_g = graph_new (g->type, g->label_type)))
+   {
+      return NULL;
+   }
+   /* XXX: todo */
+   return NULL;
+}
+
+/*!
+ * This
+ *
+ */
+unsigned long graph_edges_no_get
+(
+GRAPH_T* g,
+void* v
+)
+{
+   unsigned long no = 0;
+   
+   if (g->type == GRAPH_UNDIRECTED_T)
+   {
+      no = ((VTX_UD_T*)v)->no;
+   }
+   else if (g->type == GRAPH_DIRECTED_T)
+   {
+      no = ((VTX_D_T*)v)->no;
+   }
+   return no;
+}
 
 /*******************************************************************************
 * graph_edge_print - display all the edges of a graph
@@ -35,6 +67,29 @@ void graph_edge_print (GRAPH_T* g)
                ((VTX_UD_T*)node->v2)->id.iid);
       node = node->next;
    }
+}
+
+/*******************************************************************************
+* graph_edge_print - display all the edges of a graph
+*
+* RETURNS: 
+*/
+
+EDGE_T* graph_edge_next_get
+(
+GRAPH_T* g,
+EDGE_T* e
+)
+{
+   if (e == NULL)
+   {
+      e = g->eLst;
+   }
+   else
+   {
+      e = e->next;
+   }
+   return e;
 }
 
 /*******************************************************************************
@@ -570,26 +625,32 @@ void* vtx
    return GPH_ERR_OK;
 }
 
-/*******************************************************************************
-* graph_v_insert - insert a new edge into the graph
-*
-* RETURNS: A valid vertex node if created or present, NULL on error 
-*/
-
-static void* graph_v_create_i
-    (
-    GRAPH_T* g,         /* graph to add vertex to */
-    unsigned long vid,  /* vertext identifier */
-    void* info          /* user-specific vertext information */
-    )
+/**
+ * Creates a new graph vertex given an integer vertex identifier. If a vertex
+ * with the specified vertex identifier exists, the routine will return a
+ * vertex object for that identifier.
+ *
+ * @param[in] g    The graph to operate on
+ * @param[in] vid  An integer vertex identifier
+ * @param[in] info User-specified information that can be attached to the
+ *                 vertex
+ * @return A valid vertex node if created or present, NULL on error 
+ */
+void* graph_v_create_i
+(
+GRAPH_T* g,         
+unsigned long vid,  
+void* info          
+)
 {
    void* v;
 
+   /* Find out of a vertex object exists with the given vid */
    if (NULL != (v = graph_vertex_find_i (g, vid)))
    {
-       return v;
+      return v;
    }
-
+   
    if (g->type == GRAPH_UNDIRECTED_T)
    {
       VTX_UD_T* vtx;
@@ -900,31 +961,64 @@ BOOL_E is_edge          /* are we inserting an edge or a stand-alone vertex */
    return GPH_ERR_OK;   
 }
 
-/*******************************************************************************
-* graph_delete - delete a graph
-*
-* RETURNS: GRAPH_T* 
-*/
-
-GRAPH_T* graph_delete (GRAPH_T* g)
+/**
+ * This routine deletes a graph
+ *
+ * @param[in] g The graph to delete
+ * @return GPH_ERR_OK if successfull, GPH_ERR_OK otherwise
+ */
+GPH_ERR_E graph_delete
+(
+GRAPH_T* g
+)
 {
-   /* XXX: todo */
-   return NULL;   
+   EDGE_T* ep = g->eLst;
+   EDGE_T* en = NULL;
+
+#define NEXT_AND_FREE(PREV, NEXT)                                       \
+   do                                                                   \
+   {                                                                    \
+      while (PREV)                                                      \
+      {                                                                 \
+         NEXT = PREV->next;                                             \
+         free (PREV);                                                   \
+         PREV = NEXT;                                                   \
+      }                                                                 \
+   }while(0)
+
+   /* free the edge list */
+   NEXT_AND_FREE (ep, en);
+   if (g->type == GRAPH_UNDIRECTED_T)
+   {
+      VTX_UD_T* vp = g->vLst;
+      VTX_UD_T* vn = NULL;
+      
+/* free the vertex list */
+      NEXT_AND_FREE (vp, vn);
+   }
+   else if (g->type == GRAPH_DIRECTED_T)
+   {
+      VTX_D_T* vp = g->vLst;
+      VTX_D_T* vn = NULL;
+/* free the out edge list */
+      NEXT_AND_FREE (vp, vn);
+   }
    
+   return GPH_ERR_OK;   
 }
 
-/*******************************************************************************
-* graph_new - create a new graph
-*
-* This routine creates a new graph.
-*
-* RETURNS: A valid GRAPH_T* pointer or NULL if unsuccessful 
-*/
-
+/**
+ * This routine creates a new graph
+ *
+ * @param[in] type The type of graph to create - directed or undirected
+ * @param[in] label_id_type The type of vertex identifiers the graph will use
+ * - integer or string identifiers
+ * @return A valid GRAPH_T* if successfull or NULL if unsuccessful
+ */
 GRAPH_T* graph_new
 (
 GRAPH_TYPE_E type,              /* directed or undirected graph */
-GRAPH_LABEL_E label_id_type       /* integer or string vertex identifiers */
+GRAPH_LABEL_E label_id_type     /* integer or string vertex identifiers */
 )
 {
    GRAPH_T* gph = NULL;
@@ -946,79 +1040,3 @@ graph_new_err:
    return NULL;
 }
 
-#define GRAPH_TEST
-
-#ifdef GRAPH_TEST
-
-static void vertex_print_2 (GRAPH_T* g)
-{
-   VTX_UD_T* vtx;
-   VTX_EDGE* ve;
-   
-   vtx = graph_vertex_find_i (g, 7);
-   ve = vtx->ELst;
-   while (ve)
-   {
-      printf ("%s\n", (char*)ve->edge->aux);
-      ve = ve->next;
-   }
-}
-
-/*******************************************************************************
-* graph_main -
-*
-*       1---2  /3--/4 
-*       |   | / | / |
-*       |   |/  |/  |
-*       5   6---7---8
-*/
-
-int graph_main (int argc, char** argv)
-{
-   GRAPH_T* g;
-   void* vtx;
-   EDGE_T* e;
-   char* ctx = NULL;
-   unsigned long no = 0;
-   
-   fprintf (stderr, "graph test #1\n");
-   g = graph_new (GRAPH_UNDIRECTED_T, GRAPH_INT_T);
-   fprintf (stderr, "* inserting e1(1,2)\n");
-   graph_add_i (g, "e1", 1, NULL, 2, NULL, 1, DS_TRUE);
-   fprintf (stderr, "* inserting e2(1,5)\n");   
-   graph_add_i (g, "e2", 1, NULL, 5, NULL, 1, DS_TRUE);
-   fprintf (stderr, "* inserting e3(2,6)\n");      
-   graph_add_i (g, "e3", 2, NULL, 6, NULL, 1, DS_TRUE);
-   fprintf (stderr, "* inserting e4(6,7)\n");         
-   graph_add_i (g, "e4", 6, NULL, 7, NULL, 1, DS_TRUE);
-   fprintf (stderr, "* inserting e5(3,7)\n");            
-   graph_add_i (g, "e5", 3, NULL, 7, NULL, 1, DS_TRUE);
-   fprintf (stderr, "* inserting e6(3,4)\n");            
-   graph_add_i (g, "e6", 3, NULL, 4, NULL, 1, DS_TRUE);
-   fprintf (stderr, "* inserting e7(7,8)\n");            
-   graph_add_i (g, "e7", 7, NULL, 8, NULL, 1, DS_TRUE);
-   fprintf (stderr, "* inserting e8(4,8)\n");            
-   graph_add_i (g, "e8", 4, NULL, 8, NULL, 1, DS_TRUE);
-   fprintf (stderr, "* inserting e9(6,3)\n");               
-   graph_add_i (g, "e9", 6, NULL, 3, NULL, 1, DS_TRUE);
-   fprintf (stderr, "* inserting e10(7,4)\n");               
-   graph_add_i (g, "e10", 7, NULL, 4, NULL, 1, DS_TRUE);
-   if (GPH_ERR_EDGE_EXISTS == graph_add_i (g, "e10", 4, NULL, 7, NULL, 1, DS_TRUE))
-      fprintf (stderr, "edge exists\n");
-   fprintf (stderr, "Done inserting edges\n");
-   graph_edge_print (g);
-   graph_vertex_print (g);
-
-   vertex_print_2 (g);
-
-
-   vtx = graph_vertex_find_i (g, 7);
-   while (no < ((VTX_UD_T*)vtx)->no)
-   {
-      e = vertex_next_edge_get (g, vtx, &ctx);
-      DEBUG_EDGE_PRINT_I(g,e);
-      no++;
-   }
-   
-}
-#endif

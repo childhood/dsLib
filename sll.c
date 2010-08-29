@@ -39,6 +39,61 @@ expensive
 * RETURNS: Valid SLL_NODE* or NULL
 */
 
+SLL_T* sll_duplicate
+(
+SLL_T* sll
+)
+{
+   SLL_NODE* node = sll->lhead;
+   SLL_T* dup_list;
+   
+   if (NULL == (dup_list = sll_new (sll->data_type, sll->iterator,
+                                    sll->preiterator, sll->postiterator)))
+   {
+      return NULL;
+   }
+   
+   while (node)
+   {
+      switch (sll->data_type)
+      {
+         case IDATA:
+         case CDATA:          
+            sll_insert (dup_list, node->FIDATA);
+            break;
+         case UIDATA:
+         case UCDATA:
+            sll_insert (dup_list, node->FUIDATA);
+            break;
+         case VPDATA:
+            sll_insert (dup_list, node->FVPDATA);
+            break;
+         case FPDATA:
+            sll_insert (dup_list, node->FFPDATA);
+            break;
+         case LDATA:
+         case LLDATA:
+         case ULDATA:
+         case ULLDATA:
+            /* todo */
+            break;
+      }
+      node = node->next;
+   }
+   return SLL_ERR_OK;
+}
+
+/*******************************************************************************
+* sll_first_get - return the first node in the list
+*
+* This routine returns the first node object in the list <sll>
+*
+* ARGUMENTS:
+*  <sll> - linked list to operate on
+*            
+* RETURNS: Valid SLL_NODE* or NULL
+*/
+
 SLL_NODE* sll_first_get
     (
     SLL_T* sll  /* linked list to operate on */

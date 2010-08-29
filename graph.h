@@ -138,11 +138,14 @@ typedef enum {
    }while (0)
 
 
-/* get the vertext adjacent to given vertex in the graph */
+EDGE_T* graph_edge_next_get (GRAPH_T* g, EDGE_T* e);
+/* get the number of edges incident on a vertex */
+unsigned long graph_edges_no_get (GRAPH_T* g, void* v);
+/* get the vertex adjacent to a given vertex in the graph */
 void* vertex_next_adj_get (GRAPH_T* g, void* v, char** ctx);
-/* get the vertext next to given vertex in the graph */
+/* get the vertex next in the list of graph vertices  */
 void* vertex_next_vertex_get (GRAPH_T* g, void* v);
-/* get the vertext edge next to given edge */
+/* get the vertex edge next to given edge */
 EDGE_T* vertex_next_edge_get (GRAPH_T* g, void* v, char** saveptr);
 /* create a new graph */
 GRAPH_T* graph_new (GRAPH_TYPE_E type, GRAPH_LABEL_E label_id_type);
