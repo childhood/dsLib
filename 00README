@@ -1,5 +1,7 @@
 dsLib
 -----
+Copyright (c) 2010, Gaurav Mathur <narainmg@gmail.com> 
+All Rights Reserved.
 
 dsLib is a library of the commonly used data structure and
 algorithm. The idea is to provide rich set of APIs to these data
@@ -11,9 +13,7 @@ some of the time. There are a rich set of test cases included that
 illustrate how the data structure APIs can be used.
 
 This work is still under active development so the paragraph above
-should read more like a mission statement for the time being`.
+should read more like a mission statement for the time being.
 
-Gaurav Mathur
-(naraing@hotmail.com)
-
-29th Aug 2010
+--
+Last updated: 29th Aug 2010

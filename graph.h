@@ -1,24 +1,31 @@
-/*  Copyright 2010 Gaurav Mathur
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/*
+ * graph data structure headers
+ * Copyright (c) 2010, Gaurav Mathur <narainmg@gmail.com>
+ *   
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *   
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * See README and COPYING for more details.
+ */
 
 typedef enum {
    GRAPH_DIRECTED_T=0,
    GRAPH_UNDIRECTED_T=1
 }GRAPH_TYPE_E;
 
+/**
+ * @enum graph vertex identifier types
+ */
 typedef enum {
    GRAPH_INT_T=0,
    GRAPH_CHAR_T=1
@@ -38,15 +45,15 @@ typedef union
     unsigned long iid;  /* edge identified by an integer label*/
     }EDGID_U;
 
-/* edge node */
+/**< edge node */
 typedef struct _dsedge {
-   struct _dsedge* next;/* next edge in the list */
-   void* v1;            /* edge vertex #1 */
-   void* v2;            /* edge vertext #2 */
-   unsigned long weight;/* edge weight */
-   void* aux;           /* auxilliary data to attach to the vertex */
-   char label[128];     /* textual edge label */
-   EDGID_U id;          /* edge identifier */
+   struct _dsedge* next;/**< next edge in the list */
+   void* v1;            /**< edge vertex #1. This is the source vertex in a directed graph */
+   void* v2;            /**< edge vertext #2. This is the destination vertex in a directed graph */
+   unsigned long weight;/**< edge weight */
+   void* aux;           /**< auxilliary data to attach to the vertex */
+   char label[128];     /**< textual edge label */
+   EDGID_U id;          /**< edge identifier */
 }EDGE_T;
 
 /* list for list of edges incident on a node */
@@ -150,11 +157,13 @@ EDGE_T* graph_edge_next_get (GRAPH_T* g, EDGE_T* e);
 /* get the number of edges incident on a vertex */
 unsigned long graph_edges_no_get (GRAPH_T* g, void* v);
 /* get the vertex adjacent to a given vertex in the graph */
-void* vertex_next_adj_get (GRAPH_T* g, void* v, char** ctx);
+void* graph_vertex_next_adj_get (GRAPH_T* g, void* v, char** ctx);
 /* get the vertex next in the list of graph vertices  */
-void* vertex_next_vertex_get (GRAPH_T* g, void* v);
+void* graph_vertex_next_vertex_get (GRAPH_T* g, void* v);
 /* get the vertex edge next to given edge */
-EDGE_T* vertex_next_edge_get (GRAPH_T* g, void* v, char** saveptr);
+EDGE_T* graph_vertex_next_edge_get (GRAPH_T* g, void* v, char** saveptr);
+/* delete a graph */
+GPH_ERR_E graph_delete (GRAPH_T* g);
 /* create a new graph */
 GRAPH_T* graph_new (GRAPH_TYPE_E type, GRAPH_LABEL_E label_id_type);
 /* add a new edge to the graph */

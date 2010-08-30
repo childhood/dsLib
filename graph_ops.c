@@ -1,18 +1,22 @@
-/*  Copyright 2010 Gaurav Mathur
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/**
+ * Operations on graphs
+ * Copyright (c) 2010, Gaurav Mathur <narainmg@gmail.com>
+ *   
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *   
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * See README and COPYING for more details.
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,7 +40,6 @@ char* filename
 )
 {
    EDGE_T* e = NULL;
-   void* v;
    FILE* fp;
 
    if (NULL == filename)
@@ -65,6 +68,8 @@ char* filename
 
    if (NULL != filename)
       fclose (fp);
+   
+   return GPH_ERR_OK;
 }
 
 /**
@@ -74,7 +79,6 @@ char* filename
  * @param [in] M the numner of columns in the matrix
  * @return A valid GRAPH_T* if successful, NULL otherwise
  */
-
 GRAPH_T* matrix_create
     (
     const unsigned long N,
@@ -148,7 +152,7 @@ BFS_FUNCPTR_T func
    int no;
    
    svtx = graph_vertex_find_i (g, vid);   
-   while (NULL != (vtx = vertex_next_vertex_get (g, vtx)))
+   while (NULL != (vtx = graph_vertex_next_vertex_get (g, vtx)))
    {
       aux = malloc (sizeof (DS_BFS_AUX_T));
       if (NULL == aux)
@@ -174,7 +178,7 @@ BFS_FUNCPTR_T func
       no = ((VTX_UD_T*)uvtx)->no;
       while (no)
       {
-         vvtx = vertex_next_adj_get (g, uvtx, &ctx);
+         vvtx = graph_vertex_next_adj_get (g, uvtx, &ctx);
          aux = ((VTX_UD_T*)vvtx)->aux;
          if (aux->color == DS_BFS_WHITE)
          {
@@ -189,17 +193,17 @@ BFS_FUNCPTR_T func
    }
 
    vtx = NULL;
-   while (NULL != (vtx = vertex_next_vertex_get (g, vtx)))
+   while (NULL != (vtx = graph_vertex_next_vertex_get (g, vtx)))
    {
       free (((VTX_UD_T*)vtx)->aux);
    }
+   return GPH_ERR_OK;
 }
 
 /**
  *
  */
-
-void dfs_visit
+static void dfs_visit
 (
 GRAPH_T* g,
 void* uvtx,
@@ -219,7 +223,7 @@ DFS_FUNCPTR_T func
    no = ((VTX_UD_T*)uvtx)->no;
    while (no)
    {
-      vvtx = vertex_next_adj_get (g, uvtx, &ctx);
+      vvtx = graph_vertex_next_adj_get (g, uvtx, &ctx);
       if (((DS_DFS_AUX_T*)((VTX_UD_T*)vvtx)->aux)->color == DS_DFS_WHITE)
       {
          dfs_visit (g, vvtx, func);
@@ -268,7 +272,7 @@ DFS_FUNCPTR_T func
    DS_DFS_AUX_T* aux;
 
    vtx = NULL;
-   while (NULL != (vtx = vertex_next_vertex_get (g, vtx)))
+   while (NULL != (vtx = graph_vertex_next_vertex_get (g, vtx)))
    {
       aux = malloc (sizeof (DS_DFS_AUX_T));
       if (NULL == aux)
@@ -277,7 +281,7 @@ DFS_FUNCPTR_T func
       ((VTX_UD_T*)vtx)->aux = aux;
    }
    vtx = NULL;
-   while (NULL != (vtx = vertex_next_vertex_get (g, vtx)))
+   while (NULL != (vtx = graph_vertex_next_vertex_get (g, vtx)))
    {
       if (((DS_DFS_AUX_T*)((VTX_UD_T*)vtx)->aux)->color == DS_DFS_WHITE)
          dfs_visit (g, vtx, func);

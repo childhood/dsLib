@@ -1,18 +1,23 @@
-/*  Copyright 2010 Gaurav Mathur
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** @file graph.c
+ * 
+ * graph data structure
+ * Copyright (c) 2010, Gaurav Mathur <narainmg@gmail.com>
+ *   
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *   
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * See README and COPYING for more details.
+ */
 
 #include <stdio.h>
 #include <string.h>
@@ -21,9 +26,12 @@
 #include <ds_types.h>
 #include <graph.h>
 
-/*!
- * This
+/**
+ * This routine create a duplicate of a the given graph
  *
+ * @param[in] g The graph to duplicate
+ *
+ * @return The duplicate graph
  */
 GRAPH_T* graph_duplicate
 (
@@ -31,7 +39,7 @@ GRAPH_T* g
 )
 {
    GRAPH_T* dup_g;
-
+   
    if (NULL == (dup_g = graph_new (g->type, g->label_type)))
    {
       return NULL;
@@ -40,9 +48,12 @@ GRAPH_T* g
    return NULL;
 }
 
-/*!
- * This
- *
+/**
+ * Get the number of edges incident to given vertex in a graph.
+ * 
+ * @param[in] g The graph to oeprate on.
+ * @param[in] v The vertex whose incident edges need to be found.
+ * @return The number of edges.
  */
 unsigned long graph_edges_no_get
 (
@@ -63,12 +74,18 @@ void* v
    return no;
 }
 
-/*******************************************************************************
-* graph_edge_print - display all the edges of a graph
-*
-* RETURNS: 
-*/
-
+/**
+ * @brief This routine is an edge iterator for the entire graph.
+ *
+ * If the parameter <e> is NULL, the routine will return the first edge in the
+ * list of graph edges. If it's not it will return the edge next to the edge
+ * <e> in the list of edge objects maintained by the graph. This routine can
+ * thus be used to iterate over all the edges in the graph. There is no
+ * meaningful ordering applied to the list of edges.
+ *
+ * @param[in] g The graph to operate on
+ * @param[in] e The edge whose next edge needs to the found.
+ */
 EDGE_T* graph_edge_next_get
 (
 GRAPH_T* g,
@@ -86,41 +103,18 @@ EDGE_T* e
    return e;
 }
 
-/*******************************************************************************
-* vertex_insert - insert a vertext in the graph
-*
-* RETURNS: 
-*/
-
-void graph_vertex_print (GRAPH_T* g)
-{
-   if (g->type == GRAPH_UNDIRECTED_T)
-   {
-      VTX_UD_T* vtx = g->vLst;
-      while (vtx)
-      {
-         fprintf (stdout, "v=%lu\n", vtx->id.iid);
-         vtx = vtx->next;
-      }
-   }   
-   else if (g->type == GRAPH_DIRECTED_T)
-   {
-      VTX_D_T* vtx = g->vLst;
-      while (vtx)
-      {
-         vtx = vtx->next;
-      }
-   }
-}
-
-/*******************************************************************************
-* vertex_next_adj_get - 
-*
-*
-* RETURNS: 
-*/
-
-void* vertex_next_adj_get
+/**
+ * This routine is a vertex iterator for all adjacent vertices to a given
+ * vertex. 
+ *
+ * @param[in] g The graph to operate on
+ * @param[in] v The vertex whose adjacent vertices need to be found out.
+ * @param[out] ctx The iterator context needed for the operation of this
+ * routine.
+ * @return A vertex adjacent to <v>
+ * 
+ */
+void* graph_vertex_next_adj_get
 (
 GRAPH_T* g,     /* graph to operate on */
 void* v,        /* vertext to operate on */
@@ -150,24 +144,40 @@ char** ctx  /* saved pointer */
    else
    if (g->type == GRAPH_DIRECTED_T)
    {
-      /* XXX: todo */
+      if (NULL == *ctx)
+      {
+         *ctx = (char*)((VTX_D_T*)v)->outELst->next;
+         vtx1 = ((VTX_D_T*)v)->outELst->edge->v1;
+         vtx2 = ((VTX_D_T*)v)->outELst->edge->v2;
+      }
+      else
+      {
+         EDGE_T* e;
+         e = ((VTX_EDGE*)*ctx)->edge;
+         *ctx = (char*)((VTX_EDGE*)*ctx)->next;
+         vtx1 = e->v1;
+         vtx2 = e->v2;
+      }
+      return (vtx1==v)?vtx2:vtx1;      
    }
    return NULL;
 }
 
-/*******************************************************************************
-* vertex_next_edge_get - insert a vertext in the graph
-*
-* This routine returns the next edge in the list of edges incident to vertex
-* <v>. This routine is designed to work inside loop constructs in cases where
-* you would want to iterate over all the vertex edges. <ctx> maintains the
-* context between each iteration. The contents of <ctx> need to be
-* initialied to NULL before the first invocation of this routine.
-*
-* RETURNS: A valid EDGE_T* pointer or NULL
-*/
-
-EDGE_T* vertex_next_edge_get
+/**
+ *
+ * This routine returns the next edge in the list of edges incident to vertex
+ * <v>. This routine is designed to work inside loop constructs where you
+ * would want to iterate over all the vertex edges. <ctx> maintains the
+ * context between each iteration. The contents of <ctx> need to be
+ * initialied to NULL  before the first invocation of this routine. For
+ * directed graphs the out edge list of a vertex are iterated over.
+ * 
+ * @param[in] g The graph to operate on
+ * @param[in] v The vertex whose adjacent vertices need to be found out.
+ * @param[out] ctx The iterator context needed for the operation of this routine.
+ * @return Next edge in the list of vertex edges
+ */
+EDGE_T* graph_vertex_next_edge_get
 (
 GRAPH_T* g,     /* graph to operate on */
 void* v,        /* vertext to operate on */
@@ -197,57 +207,54 @@ char** ctx  /* saved pointer */
    return NULL;
 }
 
-/*******************************************************************************
-* vertex_next_edge_get - insert a vertext in the graph
+/**
+* @brief Get the next vertex in the list of graph vertices
 *
-* This routine returns the next edge in the list of edges incident to vertex
-* <v>. This routine is designed to work inside loop constructs in cases where
-* you would want to iterate over all the vertex edges. <ctx> maintains the
-* context between each iteration. The contents of <ctx> need to be
-* initialied to NULL before the first invocation of this routine.
+* This routine returns the next vertex in the list of vertices maintained by
+* the graph. It is useful as a iterator to go over all the graph vertices.
 *
-* RETURNS: A valid EDGE_T* pointer or NULL
+* @param[in] g The graph to operate on
+* @param[in] vtx Find the vertex next to this vertex. If NULL, then the
+* routine returns the first vertex in the list.
+* @return The valid next vertex object or NULL if reached the end of the list
 */
-
-void* vertex_next_vertex_get
+void* graph_vertex_next_vertex_get
 (
-GRAPH_T* g,     /* graph to operate on */
-void* v        /* vertext to operate on */
+GRAPH_T* g, 
+void* vtx  
 )
 {
    if (g->type == GRAPH_UNDIRECTED_T)
    {
-      if (NULL == v)
+      if (NULL == vtx)
       {
          return g->vLst;
       }
       else
       {
-         return ((VTX_UD_T*)v)->next;
+         return ((VTX_UD_T*)vtx)->next;
       }
    }
-
+   
    if (g->type == GRAPH_DIRECTED_T)
    {
-      if (NULL == v)
+      if (NULL == vtx)
       {
          return g->vLst;
       }
       else
       {
-         return ((VTX_D_T*)v)->next;
+         return ((VTX_D_T*)vtx)->next;
       }
    }
    /* should never reach here */
    return NULL;
 }
    
-/*******************************************************************************
-* edge_remove - 
-*
-* RETURNS: 
-*/
-   
+/**
+ * Remove a vertex from the graph.
+ *
+ */
 static GPH_ERR_E vertex_remove
 (
 GRAPH_T* g,
@@ -294,30 +301,6 @@ void* vtx
           }
    }       
    return GPH_ERR_OK;
-}
-
-/*******************************************************************************
-* graph_vertex_next_get - get the next vertex object in the graph
-*
-* This routines returns the next vertex to <vtx> in the graph <g>. This
-* routine would be typically used inside loops constructs where you would want
-* to iterate over all the vertices in the graph.
-*
-* RETURNS: A valid vertext pointer or NULL (signifying end of list).
-*/
-
-void* graph_vertex_next_get
-(
-GRAPH_T* g,
-void* vtx
-)
-{
-   if (g->type == GRAPH_UNDIRECTED_T)
-      return ((VTX_UD_T*)vtx)->next;
-   else if (g->type == GRAPH_DIRECTED_T)
-      return ((VTX_D_T*)vtx)->next;   
-   else
-      return NULL;
 }
 
 /*******************************************************************************
@@ -398,9 +381,8 @@ void* graph_vertex_find_c
 }
 
 /**
- *
+ * @brief 
  */
-
 static TRUTH_E graph_edge_exists_undirected
 (
 GRAPH_T* g,     /* graph to operate on */
@@ -411,24 +393,28 @@ VTX_UD_T* v2    /* edge vertex #2 */
    unsigned long no;
    char* ctx = NULL;
    EDGE_T* e;
-   
+
+   /* Look up all the edges adjacent to a vertex. For each edge, we check if
+    * it's and edge from <v1> to <v2> or not. We choose the vertex with the
+    * smaller number of incident edges to minimize the lookups.
+    */      
    if (v1->no < v2->no)
    {
       no = 0;
       while (no < v1->no)
       {
-         e = vertex_next_edge_get (g, v1, &ctx);
+         e = graph_vertex_next_edge_get (g, v1, &ctx);
          if (e->v1 == v2 || e->v2 == v2)
             return DS_YES;
          no++;
       }
    }
-   else
+   else /* optimized to only search in the shorter of the two edge lists */
    {
       no = 0;
       while (no < v2->no)
       {
-         e = vertex_next_edge_get (g, v2, &ctx);
+         e = graph_vertex_next_edge_get (g, v2, &ctx);
          if (e->v1 == v1 || e->v2 == v1)
             return DS_YES;
          no++;
@@ -438,9 +424,8 @@ VTX_UD_T* v2    /* edge vertex #2 */
 }
 
 /**
- *
+ * @brief 
  */
-
 static TRUTH_E graph_edge_exists_directed
 (
 GRAPH_T* g,     /* graph to operate on */
@@ -448,17 +433,52 @@ VTX_D_T* v1,    /* edge vertex #1 */
 VTX_D_T* v2     /* ed */
 )
 {
+   unsigned long no;
+   char* ctx = NULL;
+   EDGE_T* e;
+
+   /* Look up all the edges adjacent to a vertex. For each edge, we check if
+    * it's an edge from <v1> to <v2> or not. We choose the vertex with the
+    * smaller number of incident edges to minimize the lookups.
+    */      
+   if (v1->no < v2->no)
+   {
+      no = 0;
+      while (no < v1->no)
+      {
+         e = graph_vertex_next_edge_get (g, v1, &ctx);
+         if (e->v2 == v2)
+            return DS_YES;
+         no++;
+      }
+   }
+   else
+   {
+      no = 0;
+      while (no < v2->no)
+      {
+         e = graph_vertex_next_edge_get (g, v2, &ctx);
+         if (e->v1 == v1)
+            return DS_YES;
+         no++;
+      }
+   }
    return DS_NO;
 }
 
 /**
- * This routine finds out if an edge exists between two vertices. For a
- * directed graph it takes into account direction of the edge too.
+ * @brief This routine finds out if an edge exists between two vertices.
  *
- * 
+ * For a directed graph it takes into account direction of the edge too.
+ *
+ * @param[in] g The graph to operate on
+ * @param[in] v1 The source vertex in a directed graph or one of the edge
+ * vertices in an undirected graph.
+ * @param[in] v2 The destination vertex in a directed graph or one of the edge
+ * vertices in an undirected graph.
+ * @return DS_NO if edge exists, DS_YES if it does
  */
-
-TRUTH_E graph_edge_exists
+static TRUTH_E graph_edge_exists
 (
 GRAPH_T* g,
 void* v1,
@@ -540,12 +560,12 @@ void* v2
    {
       VTX_D_T* vtx1 = v1;
       VTX_D_T* vtx2 = v2;
-
-   ve = malloc (sizeof (VTX_EDGE));
-   if (NULL == ve)
-      return GPH_ERR_ERR;
-   ve->edge = edge;
-   ve->next = NULL;
+      
+      ve = malloc (sizeof (VTX_EDGE));
+      if (NULL == ve)
+         return GPH_ERR_ERR;
+      ve->edge = edge;
+      ve->next = NULL;
 
       
       if (NULL == vtx1->outELst)
@@ -558,13 +578,13 @@ void* v2
          vtx1->last_out_edge->next = ve;
          vtx1->last_out_edge = ve;
       }
-
-   ve = malloc (sizeof (VTX_EDGE));
-   if (NULL == ve)
-      return GPH_ERR_ERR;
-   ve->edge = edge;
-   ve->next = NULL;
-
+      
+      ve = malloc (sizeof (VTX_EDGE));
+      if (NULL == ve)
+         return GPH_ERR_ERR;
+      ve->edge = edge;
+      ve->next = NULL;
+      
       
       if (NULL == vtx2->inELst)
       {
@@ -580,12 +600,14 @@ void* v2
    return GPH_ERR_OK;
 }
 
-/*******************************************************************************
-* vertex_insert - insert a vertext in the graph
-*
-* RETURNS: 
-*/
-
+/**
+ * Insert a vertex in the list of vertices of the graph. There is no
+ * intelligence built-in the ordering of these vertices. They are inserted as
+ * they are created so they are in first-created-first-in order
+ *
+ * @param[in] g The graph to operate on
+ * @param[in] vtx The vertex to insert in the graph
+ */
 static GPH_ERR_E vertex_insert
 (
 GRAPH_T* g,
@@ -821,14 +843,13 @@ unsigned long v2       /* integer vertex identifier. */
    return GPH_ERR_ERR;   
 }
 
-/*******************************************************************************
-* edge_insert - insert an edge in the graph
-*
-* This routine inserts a newly created edge <edge> into the list of edges in
-* the graph <g>.
-*
-* RETURNS: GPH_ERR_ERR if successful, GPH_ERR_OK if not.
-*/
+/**
+ * @brief Insert an edge in the graph
+ *
+ * @param[in] g The graph to operate on
+ * @param[in] edge The edge to insert into the graph
+ * @returns GPH_ERR_OK if unsuccessful, GPH_ERR_ERR othewise
+ */
 
 static GPH_ERR_E edge_insert
 (
@@ -853,29 +874,36 @@ EDGE_T* edge
    return GPH_ERR_OK;
 }
 
-/*******************************************************************************
-* graph_add_i - add an edge or vertex into the graph
-*
-* This routine adds an edge and it's two vertices or a stand-alone vertext to
-* the graph. If <is_edge> is TRUE, then this API inserts an edge defined by
-* the two vertices <v1> and <v2>.  If <g> is a directed graph then <v1> is
-* considered to be the source vertex and <v2> the destination vertex. If
-* <is_edge> is FALSE, then this API inserts a stand-alone vertext defined by
-* <v1>.
-*
-* RETURNS: GPH_ERR_E
-*/
-
+/**
+ * @brief This routine either adds an edge and it's two vertices, or a *
+ * stand-alone vertext to the graph.
+ *
+ * The vertex identifier are integer. If <is_edge> is TRUE, then this API
+ * inserts an edge defined by the two vertices <v1> and <v2>. If <g> is a
+ * directed graph then <v1> is considered to be the source vertex and <v2> the
+ * destination vertex. If <is_edge> is FALSE, then this API inserts a
+ * stand-alone vertext defined by <v1>.
+ *
+ * @param[in] g         graph to add the edge or vertices
+ * @param[in] info      edge label
+ * @param[in] v1        integer vertex identifier
+ * @param[in] v1_info   auxilliary vertex information
+ * @param[in] v2        integer vertex identifier. Ignored if <is_edge> is FALSE
+ * @param[in] v2_info   auxilliary vertex information. Ignored if <is_edge> is FALSE
+ * @param[in] weight    edge weight. Ignored if <is_edge> is FALSE
+ * @param[in] is_edge   TRUE if inserting an edge, FALWSE if inserting a stand-alone vertex
+ * @return GPH_ERR_OK if successful, GPH_ERR_ERR otherwise
+ */
 GPH_ERR_E graph_add_i
 (
-GRAPH_T* g,             /* graph to add the edge or vertices */
-void* info,             /* edge label */
-unsigned long v1,       /* integer vertex identifier. */
-void* v1_info,          /* vertex aux. information */
-unsigned long v2,       /* integer vertext identifier. Not used if <is_edge> is FALSE */
-void* v2_info,          /* vertex aux. information. Not used if <is_edge> is FALSE */
-unsigned int weight,     /* edge weight. Not used if <is_edge> is FALSE */
-BOOL_E is_edge          /* are we inserting an edge or a stand-alone vertex */
+GRAPH_T* g,             
+void* info,             
+unsigned long v1,       
+void* v1_info,          
+unsigned long v2,       
+void* v2_info,          
+unsigned int weight,    
+BOOL_E is_edge          
 )
 {
    EDGE_T* e;
@@ -906,29 +934,35 @@ BOOL_E is_edge          /* are we inserting an edge or a stand-alone vertex */
    return GPH_ERR_OK;   
 }
 
-/*******************************************************************************
-* graph_add_c - add an edge or vertex into the graph
-*
-* This routine adds an edge and it's two vertices or a stand-alone vertext to
-* the graph. If <is_edge> is TRUE, then this API inserts an edge defined by
-* the two vertices <v1> and <v2>.  If <g> is a directed graph then <v1> is
-* considered to be the source vertex and <v2> the destination vertex. If
-* <is_edge> is FALSE, then this API inserts a stand-alone vertext defined by
-* <v1>.
-*
-* RETURNS: GPH_ERR_E
-*/
-
+/**
+ * @brief This routine adds either edge and it's two vertices, or a
+ * stand-alone vertext to the graph. The vertex identifiers are text.
+ *
+ * If 'is_edge' is TRUE, then this API inserts an edge defined by the two
+ * vertices 'v1' and 'v2'. If <g> is a directed graph then <v1> is considered
+ * to be the source vertex and <v2> the destination vertex. If <is_edge> is
+ * FALSE, then this API inserts a stand-alone vertext defined by <v1>.
+ *
+ * @param[in] g         graph to add the edge or vertices
+ * @param[in] info      edge label
+ * @param[in] v1        text vertex identifier
+ * @param[in] v1_info   auxilliary vertex information
+ * @param[in] v2        text vertex identifier. Ignored if <is_edge> is FALSE
+ * @param[in] v2_info   auxilliary vertex information. Ignored if <is_edge> is FALSE
+ * @param[in] weight    edge weight. Ignored if <is_edge> is FALSE
+ * @param[in] is_edge   TRUE if inserting an edge, FALWSE if inserting a stand-alone vertex
+ * @return GPH_ERR_OK if successful, GPH_ERR_ERR otherwise
+ */
 GPH_ERR_E graph_add_c
 (
-GRAPH_T* g,             /* graph to add the edge or vertices */
-void* info,             /* edge label */
-char* v1,               /* text vertex identifier. */
-void* v1_info,          /* vertex aux. information */
-char* v2,               /* text vertex identifier. Not used if <is_edge> is FALSE */
-void* v2_info,          /* vertex aux. information. Not used if <is_edge> is FALSE */
-unsigned int weight,    /* edge weight. Not used if <is_edge> is FALSE */
-BOOL_E is_edge          /* are we inserting an edge or a stand-alone vertex */
+GRAPH_T* g,
+void* info,     
+char* v1,       
+void* v1_info,       
+char* v2,               
+void* v2_info, 
+unsigned int weight,    
+BOOL_E is_edge       
 )
 {
    EDGE_T* e;
@@ -956,7 +990,10 @@ BOOL_E is_edge          /* are we inserting an edge or a stand-alone vertex */
 }
 
 /**
- * This routine deletes a graph
+ * @brief This routine deletes a graph.
+ *
+ * It will also free up all the edge and vertex objects maintained within the
+ * graph.
  *
  * @param[in] g The graph to delete
  * @return GPH_ERR_OK if successfull, GPH_ERR_OK otherwise
@@ -1002,7 +1039,7 @@ GRAPH_T* g
 }
 
 /**
- * This routine creates a new graph
+ * @brief This routine creates a new graph
  *
  * @param[in] type The type of graph to create - directed or undirected
  * @param[in] label_id_type The type of vertex identifiers the graph will use

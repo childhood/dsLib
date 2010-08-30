@@ -1,18 +1,22 @@
-/*  Copyright 2010 Gaurav Mathur
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/**
+ * graph operation headers
+ * Copyright (c) 2010, Gaurav Mathur <narainmg@gmail.com>
+ *   
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *   
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * See README and COPYING for more details.
+ */
 
 typedef int(*BFS_FUNCPTR_T)(void*);
 typedef int(*DFS_FUNCPTR_T)(void*);
@@ -32,3 +36,9 @@ typedef struct ds_dfs_AUX {
 } DS_DFS_AUX_T;
 
 GRAPH_T* matrix_create (const unsigned long row, const unsigned long column);
+
+GPH_ERR_E dfs (GRAPH_T* g, unsigned long vid, DFS_FUNCPTR_T func);
+GPH_ERR_E bfs (GRAPH_T* g, unsigned long vid, BFS_FUNCPTR_T func);
+GRAPH_T* matrix_create (const unsigned long N, const unsigned long M);
+GPH_ERR_E graphviz_description (GRAPH_T* g, char* filename);
+

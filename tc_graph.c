@@ -1,3 +1,22 @@
+/**
+ * graph test cases
+ * Copyright (c) 2010, Gaurav Mathur <narainmg@gmail.com>
+ *   
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *   
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * See README and COPYING for more details.
+ */
 
 
 #include <stdio.h>
@@ -7,10 +26,34 @@
 #include <graph.h>
 #include <graph_ops.h>
 
+void tc_graph_vertex_print (GRAPH_T* g)
+{
+   fprintf (stdout, "[List of vertices]\n");
+   if (g->type == GRAPH_UNDIRECTED_T)
+   {
+      VTX_UD_T* vtx = g->vLst;
+      while (vtx)
+      {
+         fprintf (stdout, "v=%lu\n", vtx->id.iid);
+         vtx = vtx->next;
+      }
+   }   
+   else if (g->type == GRAPH_DIRECTED_T)
+   {
+      VTX_D_T* vtx = g->vLst;
+      while (vtx)
+      {
+         fprintf (stdout, "v=%lu\n", vtx->id.iid);
+         vtx = vtx->next;
+      }
+   }
+}
+
 void tc_graph_edge_print (GRAPH_T* g)
 {
    EDGE_T* e = NULL;
-   
+
+   fprintf (stdout, "[List of edges]\n");
    while (NULL != (e = graph_edge_next_get (g, e)))
    {
       fprintf (stdout, "edge (%s) v1=%lu v2=%lu\n",
@@ -23,6 +66,7 @@ void tc_graph_edge_print (GRAPH_T* g)
 int bfs_vertex_func (void* vtx)
 {
    fprintf (stdout, "[BFS TC] vertex id=%lu\n", ((VTX_UD_T*)vtx)->id.iid);
+   return 0;
 }
 
 static void vertex_print_2 (GRAPH_T* g)
@@ -81,7 +125,7 @@ void bfs_main (void)
    vtx = graph_vertex_find_i (g, 7);
    while (no < ((VTX_UD_T*)vtx)->no)
    {
-      e = vertex_next_edge_get (g, vtx, &ctx);
+      e = graph_vertex_next_edge_get (g, vtx, &ctx);
       DEBUG_EDGE_PRINT_I(g,e);
       no++;
    }
@@ -105,7 +149,7 @@ void bfs_main (void)
 GPH_ERR_E matrix_main (void)
 {
    void* vtx;
-   char* saveptr = NULL;
+   //char* saveptr = NULL;
    GRAPH_T* g;
    EDGE_T* e;
    unsigned long no;
@@ -124,7 +168,7 @@ GPH_ERR_E matrix_main (void)
    no = 0;
    while (no < ((VTX_UD_T*)vtx)->no)
    {
-      e = vertex_next_edge_get (g, vtx, &ctx);
+      e = graph_vertex_next_edge_get (g, vtx, &ctx);
       DEBUG_EDGE_PRINT_I(g,e);
       no++;
    }
@@ -139,3 +183,71 @@ GPH_ERR_E matrix_main (void)
    return GPH_ERR_OK;
 }
 
+   
+/**
+ * @brief Testing construction of a directed graph.
+ *
+ *       1-->2  ->3-->>4 
+ *       |   | /  | /  |
+ *       |   |/   |/   |
+ *       v   v    v    v
+ *       5   6--->7--->8
+ *           |
+ *           |
+ *           V
+ *           9
+ */
+void tc_directed_main (void)
+{
+   GRAPH_T* g;
+   void* vtx;
+   EDGE_T* e;
+   char* ctx = NULL;
+   unsigned long no = 0;
+   
+   fprintf (stderr, "graph test #1\n");
+   g = graph_new (GRAPH_DIRECTED_T, GRAPH_INT_T);
+   fprintf (stderr, "* inserting e1(1,2)\n");
+   graph_add_i (g, "e1", 1, NULL, 2, NULL, 1, DS_TRUE);
+   fprintf (stderr, "* inserting e2(1,5)\n");   
+   graph_add_i (g, "e2", 1, NULL, 5, NULL, 1, DS_TRUE);
+   fprintf (stderr, "* inserting e3(2,6)\n");      
+   graph_add_i (g, "e3", 2, NULL, 6, NULL, 1, DS_TRUE);
+   fprintf (stderr, "* inserting e4(6,7)\n");         
+   graph_add_i (g, "e4", 6, NULL, 7, NULL, 1, DS_TRUE);
+   fprintf (stderr, "* inserting e5(3,7)\n");            
+   graph_add_i (g, "e5", 3, NULL, 7, NULL, 1, DS_TRUE);
+   fprintf (stderr, "* inserting e6(3,4)\n");            
+   graph_add_i (g, "e6", 3, NULL, 4, NULL, 1, DS_TRUE);
+   fprintf (stderr, "* inserting e7(7,8)\n");            
+   graph_add_i (g, "e7", 7, NULL, 8, NULL, 1, DS_TRUE);
+   fprintf (stderr, "* inserting e8(4,8)\n");            
+   graph_add_i (g, "e8", 4, NULL, 8, NULL, 1, DS_TRUE);
+   fprintf (stderr, "* inserting e9(6,3)\n");               
+   graph_add_i (g, "e9", 6, NULL, 3, NULL, 1, DS_TRUE);
+   fprintf (stderr, "* inserting e10(7,4)\n");               
+   graph_add_i (g, "e10", 7, NULL, 4, NULL, 1, DS_TRUE);
+   if (GPH_ERR_EDGE_EXISTS == graph_add_i (g, "e11", 4, NULL, 7, NULL, 1, DS_TRUE))
+      fprintf (stderr, "edge exists\n");
+   fprintf (stderr, "* inserting e10(7,4)\n");               
+   graph_add_i (g, "e12", 6, NULL, 9, NULL, 1, DS_TRUE);
+   
+   fprintf (stderr, "Done inserting edges\n");
+   tc_graph_edge_print (g);
+   tc_graph_vertex_print (g);
+   return 0;
+   vertex_print_2 (g);
+   vtx = graph_vertex_find_i (g, 7);
+   while (no < ((VTX_UD_T*)vtx)->no)
+   {
+      e = graph_vertex_next_edge_get (g, vtx, &ctx);
+      DEBUG_EDGE_PRINT_I(g,e);
+      no++;
+   }
+
+   fprintf (stderr, "Starting BFS\n");
+   bfs (g, 2, bfs_vertex_func);
+
+   fprintf (stderr, "Starting DFS\n");
+   dfs (g, 2, bfs_vertex_func);   
+}
