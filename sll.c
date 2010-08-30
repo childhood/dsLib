@@ -1,23 +1,18 @@
-/* sll.c - single linked list implementation */
+/*  Copyright 2010 Gaurav Mathur
 
-/*
-modification history
---------------------
-07jul08,gnm written
-06aug10,gnm added sll_next_get(), sll_prev_get(), sll_first_get(),
-            sll_last_get(); fixed compilation warnings
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-/*
-DESCRIPTION
-
-To-Do
-o add iteration function as a callback
-o make item type void
-o Alternate API to handle devices which do no have va_arg or if va_arg is too
-expensive
-*/
-
 
 #include <stdio.h>
 #include <stdlib.h>
