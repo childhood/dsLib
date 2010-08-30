@@ -14,12 +14,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-int main (int argc, char** argv)
-{
-   //graph_main();
-   //sll_main ();
-   //is_sort_main ();
-   //queue_main ();
-   matrix_main();
-   //bfs_main ();
-}
+#define TEST_CASE
+#define TEST_CASE_GRAPH
+#define TEST_CASE_QUEUE
+#define TEST_CASE_SLL
+#define TEST_CASE_HEAP
+#define TEST_CASE_BTREE

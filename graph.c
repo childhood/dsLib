@@ -69,25 +69,6 @@ void* v
 * RETURNS: 
 */
 
-void graph_edge_print (GRAPH_T* g)
-{
-   EDGE_T* node = g->eLst;
-   while (node)
-   {
-      fprintf (stdout, "edge (%s) v1=%lu v2=%lu\n",
-               (char*)node->aux, 
-               ((VTX_UD_T*)node->v1)->id.iid,
-               ((VTX_UD_T*)node->v2)->id.iid);
-      node = node->next;
-   }
-}
-
-/*******************************************************************************
-* graph_edge_print - display all the edges of a graph
-*
-* RETURNS: 
-*/
-
 EDGE_T* graph_edge_next_get
 (
 GRAPH_T* g,
@@ -998,7 +979,7 @@ GRAPH_T* g
          PREV = NEXT;                                                   \
       }                                                                 \
    }while(0)
-
+   
    /* free the edge list */
    NEXT_AND_FREE (ep, en);
    if (g->type == GRAPH_UNDIRECTED_T)
