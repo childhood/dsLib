@@ -111,30 +111,74 @@ GRAPH_T* matrix_create
     return matrix;
     }
 
-/**
- * 
- * BFS(G, s)
- *  1  for each vertex u <- V [G] - {s}
- *  2       do color[u] <- WHITE
- *  3          d[u] <- 8
- *  4          p[u] <- NIL
- *  5  color[s] <- GRAY
- *  6  d[s] <- 0
- *  7  p[s] <- NIL
- *  8  Q <- Ø
- *  9  ENQUEUE(Q, s)
- * 10  while Q != Ø
- * 11      do u <- DEQUEUE(Q)
- * 12         for each v <- Adj[u]
- * 13             do if color[v] = WHITE
- * 14                   then color[v] <- GRAY
- * 15                        d[v] <- d[u] + 1
- * 16                        p[v] <- u
- * 17                        ENQUEUE(Q, v)
- * 18         color[u] <- BLACK
- */
+GPH_ERR_E bfs_directed
+(
+GRAPH_T* g,
+unsigned long vid,
+BFS_FUNCPTR_T func
+)
+{
+   void* vtx = NULL;
+   QUEUE_T* q;
+   QUEUE_ERR_E err;
+   DS_BFS_AUX_T* aux;
+   void* svtx;
+   char* ctx = NULL;
+   void* vvtx;
+   void* uvtx;
+   int no;
+   
+   svtx = graph_vertex_find_i (g, vid);   
+   while (NULL != (vtx = graph_vertex_next_vertex_get (g, vtx)))
+   {
+      aux = malloc (sizeof (DS_BFS_AUX_T));
+      if (NULL == aux)
+         return GPH_ERR_ERR;
+      aux->color = DS_BFS_WHITE;
+      aux->distance = -1;
+      ((VTX_D_T*)vtx)->aux = aux;
+   }
+   aux = ((VTX_D_T*)svtx)->aux;
+   aux->color = DS_BFS_WHITE;
+   aux->distance = 0;
+   
+   q = queue_create (VPDATA, g->v_no);
+   if (NULL == q)
+   {
+      assert (0); /* for now */
+      /* XXX: todo */
+   }
+   queue_enqueue_vp (q, svtx);
+   while (DS_NO == queue_is_empty(q))
+   {
+      uvtx = queue_dequeue_vp (q, &err);
+      no = ((VTX_D_T*)uvtx)->no;
+      printf ("t =%lu", no);
+      while (no)
+      {
+         vvtx = graph_vertex_next_adj_get (g, uvtx, &ctx);
+         aux = ((VTX_D_T*)vvtx)->aux;
+         if (aux->color == DS_BFS_WHITE)
+         {
+            aux->color = DS_BFS_GRAY;
+            aux->distance = ((DS_BFS_AUX_T*)((VTX_D_T*)uvtx)->aux)->distance + 1;
+            queue_enqueue_vp (q, vvtx);
+         }
+         no--;
+      }
+      func (uvtx);
+      ((DS_BFS_AUX_T*)((VTX_D_T*)uvtx)->aux)->color = DS_BFS_BLACK;
+   }
 
-GPH_ERR_E bfs
+   vtx = NULL;
+   while (NULL != (vtx = graph_vertex_next_vertex_get (g, vtx)))
+   {
+      free (((VTX_D_T*)vtx)->aux);
+   }
+   return GPH_ERR_OK;
+}
+
+GPH_ERR_E bfs_undirected
 (
 GRAPH_T* g,
 unsigned long vid,
@@ -201,9 +245,54 @@ BFS_FUNCPTR_T func
 }
 
 /**
+ * @code
+ * BFS(G, s)
+ *  1  for each vertex u <- V [G] - {s}
+ *  2       do color[u] <- WHITE
+ *  3          d[u] <- 8
+ *  4          p[u] <- NIL
+ *  5  color[s] <- GRAY
+ *  6  d[s] <- 0
+ *  7  p[s] <- NIL
+ *  8  Q <- Ø
+ *  9  ENQUEUE(Q, s)
+ * 10  while Q != Ø
+ * 11      do u <- DEQUEUE(Q)
+ * 12         for each v <- Adj[u]
+ * 13             do if color[v] = WHITE
+ * 14                   then color[v] <- GRAY
+ * 15                        d[v] <- d[u] + 1
+ * 16                        p[v] <- u
+ * 17                        ENQUEUE(Q, v)
+ * 18         color[u] <- BLACK
+ * @endcode
+ */
+
+GPH_ERR_E bfs
+(
+GRAPH_T* g,
+unsigned long vid,
+BFS_FUNCPTR_T func
+)
+{
+   GPH_ERR_E err;
+   
+   if (g->type == GRAPH_UNDIRECTED_T)
+   {
+      err = bfs_undirected (g, vid, func);
+   }
+   else if (g->type == GRAPH_DIRECTED_T)
+   {
+      err = bfs_directed (g, vid, func);
+   }
+
+   return err;
+}
+
+/**
  *
  */
-static void dfs_visit
+static void dfs_visit_undirected
 (
 GRAPH_T* g,
 void* uvtx,
@@ -214,8 +303,9 @@ DFS_FUNCPTR_T func
    char* ctx = NULL;
    unsigned int no;
    void* vvtx;
-   
-   ((DS_DFS_AUX_T*)((VTX_UD_T*)uvtx)->aux)->color = DS_DFS_GRAY;
+
+   UD_AUX_COLOR(uvtx) = DS_DFS_GRAY;
+   //((DS_DFS_AUX_T*)((VTX_D_T*)uvtx)->aux)->color = DS_DFS_GRAY;
    clock_gettime (CLOCK_MONOTONIC, &tp);
    memcpy (&((DS_DFS_AUX_T*)((VTX_UD_T*)uvtx)->aux)->d_time, &tp,
            sizeof (struct timespec));
@@ -226,13 +316,50 @@ DFS_FUNCPTR_T func
       vvtx = graph_vertex_next_adj_get (g, uvtx, &ctx);
       if (((DS_DFS_AUX_T*)((VTX_UD_T*)vvtx)->aux)->color == DS_DFS_WHITE)
       {
-         dfs_visit (g, vvtx, func);
+         dfs_visit_undirected (g, vvtx, func);
       }
       no--;
    }
    ((DS_DFS_AUX_T*)((VTX_UD_T*)uvtx)->aux)->color = DS_DFS_BLACK;
    clock_gettime (CLOCK_MONOTONIC, &tp);
    memcpy (&((DS_DFS_AUX_T*)((VTX_UD_T*)uvtx)->aux)->f_time, &tp,
+           sizeof (struct timespec));
+   func (uvtx);
+}
+
+/**
+ *
+ */
+static void dfs_visit_directed
+(
+GRAPH_T* g,
+void* uvtx,
+DFS_FUNCPTR_T func
+)
+{
+   struct timespec tp;
+   char* ctx = NULL;
+   unsigned int no;
+   void* vvtx;
+
+   ((DS_DFS_AUX_T*)((VTX_D_T*)uvtx)->aux)->color = DS_DFS_GRAY;
+   clock_gettime (CLOCK_MONOTONIC, &tp);
+   memcpy (&((DS_DFS_AUX_T*)((VTX_D_T*)uvtx)->aux)->d_time, &tp,
+           sizeof (struct timespec));
+
+   no = ((VTX_D_T*)uvtx)->no;
+   while (no)
+   {
+      vvtx = graph_vertex_next_adj_get (g, uvtx, &ctx);
+      if (((DS_DFS_AUX_T*)((VTX_D_T*)vvtx)->aux)->color == DS_DFS_WHITE)
+      {
+         dfs_visit_directed (g, vvtx, func);
+      }
+      no--;
+   }
+   ((DS_DFS_AUX_T*)((VTX_D_T*)uvtx)->aux)->color = DS_DFS_BLACK;
+   clock_gettime (CLOCK_MONOTONIC, &tp);
+   memcpy (&((DS_DFS_AUX_T*)((VTX_D_T*)uvtx)->aux)->f_time, &tp,
            sizeof (struct timespec));
    func (uvtx);
 }
@@ -278,13 +405,30 @@ DFS_FUNCPTR_T func
       if (NULL == aux)
          return GPH_ERR_ERR;
       aux->color = DS_DFS_WHITE;
-      ((VTX_UD_T*)vtx)->aux = aux;
+      if (g->type == GRAPH_UNDIRECTED_T)
+      {
+         ((VTX_UD_T*)vtx)->aux = aux;
+      }
+      else if (g->type == GRAPH_DIRECTED_T)
+      {
+         ((VTX_D_T*)vtx)->aux = aux;
+      }
+
    }
    vtx = NULL;
    while (NULL != (vtx = graph_vertex_next_vertex_get (g, vtx)))
    {
-      if (((DS_DFS_AUX_T*)((VTX_UD_T*)vtx)->aux)->color == DS_DFS_WHITE)
-         dfs_visit (g, vtx, func);
+      if (g->type == GRAPH_UNDIRECTED_T)
+      {
+         if (((DS_DFS_AUX_T*)((VTX_UD_T*)vtx)->aux)->color == DS_DFS_WHITE)
+            dfs_visit_undirected (g, vtx, func);
+      }
+      else if (g->type == GRAPH_DIRECTED_T)
+      {
+         if (((DS_DFS_AUX_T*)((VTX_D_T*)vtx)->aux)->color == DS_DFS_WHITE)
+            dfs_visit_directed (g, vtx, func);         
+      }
+
    }
    return GPH_ERR_OK;
 }

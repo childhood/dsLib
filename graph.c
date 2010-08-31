@@ -104,8 +104,11 @@ EDGE_T* e
 }
 
 /**
- * This routine is a vertex iterator for all adjacent vertices to a given
- * vertex. 
+ * @brief This routine is a vertex iterator for all adjacent vertices to a *
+ * given vertex.
+ *
+ * For directed graphs the vertices reachable through out edges are considered
+ * to be the adjacent vertices
  *
  * @param[in] g The graph to operate on
  * @param[in] v The vertex whose adjacent vertices need to be found out.
@@ -178,6 +181,61 @@ char** ctx  /* saved pointer */
  * @return Next edge in the list of vertex edges
  */
 EDGE_T* graph_vertex_next_edge_get
+(
+GRAPH_T* g,     /* graph to operate on */
+void* v,        /* vertext to operate on */
+char** ctx  /* saved pointer */
+)
+{
+   if (g->type == GRAPH_UNDIRECTED_T)
+   {
+      if (NULL == *ctx)
+      {
+         *ctx = (char*)((VTX_UD_T*)v)->ELst->next;
+         return ((VTX_UD_T*)v)->ELst->edge;
+      }
+      else
+      {
+         EDGE_T* e;
+         e = ((VTX_EDGE*)*ctx)->edge;
+         *ctx = (char*)((VTX_EDGE*)*ctx)->next;
+         return e;
+      }
+   }
+   else
+   if (g->type == GRAPH_DIRECTED_T)
+   {
+      if (NULL == *ctx)
+      {
+         *ctx = (char*)((VTX_D_T*)v)->outELst->next;
+         return ((VTX_D_T*)v)->outELst->edge;
+      }
+      else
+      {
+         EDGE_T* e;
+         e = ((VTX_EDGE*)*ctx)->edge;
+         *ctx = (char*)((VTX_EDGE*)*ctx)->next;
+         return e;
+      }
+   }
+   return NULL;
+}
+
+/**
+ * @brief This routine returns the next in edge in the list of edges incident to
+ * vertex <v> in a directed graph.
+ *
+ * This routine is designed to work inside loop constructs where you would
+ * want to iterate over all the vertex edges. <ctx> maintains the context
+ * between each iteration. The contents of <ctx> need to be initialied to NULL
+ * before the first invocation of this routine. 
+ * 
+ * @param[in] g The graph to operate on
+ * @param[in] v The vertex whose adjacent vertices need to be found out.
+ * @param[out] ctx The iterator context needed for the operation of this routine.
+ * @return Next edge in the list of vertex edges
+ */
+EDGE_T* graph_vertex_next_in_edge_get
 (
 GRAPH_T* g,     /* graph to operate on */
 void* v,        /* vertext to operate on */
@@ -578,13 +636,13 @@ void* v2
          vtx1->last_out_edge->next = ve;
          vtx1->last_out_edge = ve;
       }
+      vtx1->no++;
       
       ve = malloc (sizeof (VTX_EDGE));
       if (NULL == ve)
          return GPH_ERR_ERR;
       ve->edge = edge;
       ve->next = NULL;
-      
       
       if (NULL == vtx2->inELst)
       {
@@ -596,6 +654,7 @@ void* v2
          vtx2->last_in_edge->next = ve;
          vtx2->last_in_edge = ve;
       }
+
    }
    return GPH_ERR_OK;
 }
@@ -685,7 +744,7 @@ void* info
    if (g->type == GRAPH_DIRECTED_T)
    {
       VTX_D_T* vtx;
-      if (NULL == (vtx = malloc (sizeof (VTX_UD_T))))
+      if (NULL == (vtx = malloc (sizeof (VTX_D_T))))
          return NULL;
 
       vtx->outELst = NULL;

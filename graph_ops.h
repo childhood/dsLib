@@ -35,6 +35,13 @@ typedef struct ds_dfs_AUX {
    struct timespec f_time;
 } DS_DFS_AUX_T;
 
+#define D_AUX_COLOR(VTX)   ((DS_DFS_AUX_T*)((VTX_D_T*)(VTX))->aux)->color
+#define D_AUX_DTIME(VTX)   ((DS_DFS_AUX_T*)((VTX_D_T*)(VTX))->aux)->d_time
+#define D_AUX_FTIME(VTX)   ((DS_DFS_AUX_T*)((VTX_D_T*)(VTX))->aux)->f_time
+#define UD_AUX_COLOR(VTX)   ((DS_DFS_AUX_T*)((VTX_UD_T*)(VTX))->aux)->color
+#define UD_AUX_DTIME(VTX)   ((DS_DFS_AUX_T*)((VTX_UD_T*)(VTX))->aux)->d_time
+#define UD_AUX_FTIME(VTX)   ((DS_DFS_AUX_T*)((VTX_UD_T*)(VTX))->aux)->f_time
+
 GRAPH_T* matrix_create (const unsigned long row, const unsigned long column);
 
 GPH_ERR_E dfs (GRAPH_T* g, unsigned long vid, DFS_FUNCPTR_T func);

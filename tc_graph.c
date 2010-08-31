@@ -56,10 +56,20 @@ void tc_graph_edge_print (GRAPH_T* g)
    fprintf (stdout, "[List of edges]\n");
    while (NULL != (e = graph_edge_next_get (g, e)))
    {
-      fprintf (stdout, "edge (%s) v1=%lu v2=%lu\n",
-               (char*)e->aux, 
-               ((VTX_UD_T*)e->v1)->id.iid,
-               ((VTX_UD_T*)e->v2)->id.iid);
+      if (g->type == GRAPH_UNDIRECTED_T)
+      {
+         fprintf (stdout, "edge (%s) v1=%lu v2=%lu\n",
+                  (char*)e->aux, 
+                  ((VTX_UD_T*)e->v1)->id.iid,
+                  ((VTX_UD_T*)e->v2)->id.iid);
+      }
+      else if (g->type == GRAPH_DIRECTED_T)
+      {
+         fprintf (stdout, "edge (%s) v1=%lu v2=%lu\n",
+                  (char*)e->aux, 
+                  ((VTX_D_T*)e->v1)->id.iid,
+                  ((VTX_D_T*)e->v2)->id.iid);
+      }
    }
 }
 
@@ -69,12 +79,32 @@ int bfs_vertex_func (void* vtx)
    return 0;
 }
 
+int bfs_directed_func (void* vtx)
+{
+   fprintf (stdout, "[BFS TC] vertex id=%lu\n", ((VTX_D_T*)vtx)->id.iid);
+   return 0;
+}
+
+static void vertex_print_3 (GRAPH_T* g)
+{
+   VTX_D_T* vtx;
+   VTX_EDGE* ve;
+   
+   vtx = graph_vertex_find_i (g, 6);
+   ve = vtx->outELst;
+   while (ve)
+   {
+      printf ("%s\n", (char*)ve->edge->aux);
+      ve = ve->next;
+   }
+}
+
 static void vertex_print_2 (GRAPH_T* g)
 {
    VTX_UD_T* vtx;
    VTX_EDGE* ve;
    
-   vtx = graph_vertex_find_i (g, 7);
+   vtx = graph_vertex_find_i (g, 6);
    ve = vtx->ELst;
    while (ve)
    {
@@ -235,10 +265,13 @@ void tc_directed_main (void)
    fprintf (stderr, "Done inserting edges\n");
    tc_graph_edge_print (g);
    tc_graph_vertex_print (g);
-   return 0;
-   vertex_print_2 (g);
-   vtx = graph_vertex_find_i (g, 7);
-   while (no < ((VTX_UD_T*)vtx)->no)
+
+   vertex_print_3 (g);
+   //return (0);
+   printf ("DDDD\n");
+   vtx = graph_vertex_find_i (g, 6);
+   printf ("DDDD = %lu\n", ((VTX_D_T*)vtx)->no);
+   while (no < ((VTX_D_T*)vtx)->no)
    {
       e = graph_vertex_next_edge_get (g, vtx, &ctx);
       DEBUG_EDGE_PRINT_I(g,e);
@@ -246,8 +279,8 @@ void tc_directed_main (void)
    }
 
    fprintf (stderr, "Starting BFS\n");
-   bfs (g, 2, bfs_vertex_func);
+   bfs (g, 6, bfs_directed_func);
 
    fprintf (stderr, "Starting DFS\n");
-   dfs (g, 2, bfs_vertex_func);   
+   dfs (g, 2, bfs_directed_func);   
 }
