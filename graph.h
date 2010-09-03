@@ -62,6 +62,13 @@ typedef struct _vtxedge {
    EDGE_T* edge;   
 } VTX_EDGE;
 
+/* common vertex node fields */
+#define COMMON_VERTEX_FIELDS                                            \
+   struct _dsvtx* next;                                                 \
+   unsigned long no;   /* total number of edges incident on the vertex */ \
+   void* aux;                                                           \
+   VTXID_U id;         /* vertex identifier */                          \
+
 /* vertex node for a directed graph */
 typedef struct _dsvtxd {
    struct _dsvtxd* next; /* next vertex in the list */
@@ -153,13 +160,14 @@ typedef enum {
    }while (0)
 
 
+/* get the next edge in the list of graph edges */
 EDGE_T* graph_edge_next_get (GRAPH_T* g, EDGE_T* e);
+/* get the vertex next in the list of graph vertices  */
+void* graph_vertex_next_get (GRAPH_T* g, void* v);
 /* get the number of edges incident on a vertex */
 unsigned long graph_edges_no_get (GRAPH_T* g, void* v);
 /* get the vertex adjacent to a given vertex in the graph */
 void* graph_vertex_next_adj_get (GRAPH_T* g, void* v, char** ctx);
-/* get the vertex next in the list of graph vertices  */
-void* graph_vertex_next_vertex_get (GRAPH_T* g, void* v);
 /* get the vertex edge next to given edge */
 EDGE_T* graph_vertex_next_edge_get (GRAPH_T* g, void* v, char** saveptr);
 /* delete a graph */
@@ -170,6 +178,8 @@ GRAPH_T* graph_new (GRAPH_TYPE_E type, GRAPH_LABEL_E label_id_type);
 GPH_ERR_E graph_add_i (GRAPH_T* g, void* info, unsigned long v1,
                        void* v1_info, unsigned long v2, void* v2_info,
                        unsigned int weight, BOOL_E is_edge);
+/* find if an edge (u, v) exists */
+EDGE_T* graph_edge_find (GRAPH_T* g, void* u, void* v);
 /* return the vertex identified by the integer label */
 void* graph_vertex_find_i (GRAPH_T* g, unsigned long vid);
 /* diagnostic print */

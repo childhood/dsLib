@@ -276,7 +276,7 @@ char** ctx  /* saved pointer */
 * routine returns the first vertex in the list.
 * @return The valid next vertex object or NULL if reached the end of the list
 */
-void* graph_vertex_next_vertex_get
+void* graph_vertex_next_get
 (
 GRAPH_T* g, 
 void* vtx  
@@ -441,7 +441,7 @@ void* graph_vertex_find_c
 /**
  * @brief 
  */
-static TRUTH_E graph_edge_exists_undirected
+static EDGE_T* graph_edge_find_undirected
 (
 GRAPH_T* g,     /* graph to operate on */
 VTX_UD_T* v1,   /* edge vertex #1 */
@@ -463,7 +463,7 @@ VTX_UD_T* v2    /* edge vertex #2 */
       {
          e = graph_vertex_next_edge_get (g, v1, &ctx);
          if (e->v1 == v2 || e->v2 == v2)
-            return DS_YES;
+            return e;
          no++;
       }
    }
@@ -474,17 +474,17 @@ VTX_UD_T* v2    /* edge vertex #2 */
       {
          e = graph_vertex_next_edge_get (g, v2, &ctx);
          if (e->v1 == v1 || e->v2 == v1)
-            return DS_YES;
+            return e;
          no++;
       }
    }
-   return DS_NO;
+   return NULL;
 }
 
 /**
  * @brief 
  */
-static TRUTH_E graph_edge_exists_directed
+static EDGE_T* graph_edge_find_directed
 (
 GRAPH_T* g,     /* graph to operate on */
 VTX_D_T* v1,    /* edge vertex #1 */
@@ -506,7 +506,7 @@ VTX_D_T* v2     /* ed */
       {
          e = graph_vertex_next_edge_get (g, v1, &ctx);
          if (e->v2 == v2)
-            return DS_YES;
+            return e;
          no++;
       }
    }
@@ -517,11 +517,11 @@ VTX_D_T* v2     /* ed */
       {
          e = graph_vertex_next_edge_get (g, v2, &ctx);
          if (e->v1 == v1)
-            return DS_YES;
+            return e;
          no++;
       }
    }
-   return DS_NO;
+   return e;
 }
 
 /**
@@ -534,25 +534,27 @@ VTX_D_T* v2     /* ed */
  * vertices in an undirected graph.
  * @param[in] v2 The destination vertex in a directed graph or one of the edge
  * vertices in an undirected graph.
- * @return DS_NO if edge exists, DS_YES if it does
+ * @return A valid edge if edge exists, NULL if it does not
  */
-static TRUTH_E graph_edge_exists
+EDGE_T* graph_edge_find
 (
 GRAPH_T* g,
 void* v1,
 void* v2
 )
 {
+   EDGE_T* e = NULL;
+   
    if (g->type == GRAPH_DIRECTED_T)
    {
-      return graph_edge_exists_directed (g, v1, v2);
+      e = graph_edge_find_directed (g, v1, v2);
    }
    else if (g->type == GRAPH_UNDIRECTED_T)
    {
-      return graph_edge_exists_undirected (g, v1, v2);
+      e = graph_edge_find_undirected (g, v1, v2);
    }
    /* should never reach here */
-   return DS_NO;
+   return e;
 }
 
 /*******************************************************************************
@@ -970,7 +972,8 @@ BOOL_E is_edge
 
    v1o = graph_v_create_i (g, v1, info);
    v2o = graph_v_create_i (g, v2, info);
-   if (DS_YES == graph_edge_exists (g, v1o, v2o))
+   
+   if (NULL  != graph_edge_find (g, v1o, v2o))
    {
       return GPH_ERR_EDGE_EXISTS;
    }

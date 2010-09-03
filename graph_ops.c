@@ -111,6 +111,138 @@ GRAPH_T* matrix_create
     return matrix;
     }
 
+/*
+INITIALIZE-SINGLE-SOURCE(G, s)
+1  for each vertex v ? V[G]
+2       do d[v] ? 8
+3          p[v] ? NIL
+4  d[s] 0
+*/
+
+static GPH_ERR_E initialize_single_source
+(
+GRAPH_T* g,
+unsigned long source_vid
+)
+{
+   void* vtx;
+   void* svtx;
+   DS_SP_AUX_T* aux;
+   
+   while (NULL != (vtx = graph_vertex_next_get (g, vtx)))
+   {
+      aux = malloc (sizeof (DS_SP_AUX_T));
+      if (NULL == aux)
+         return GPH_ERR_ERR;
+      aux->pred = 0; /* XXX: this is not correct and could land us in trouble.
+                        need to find a better way to say NIL */
+      aux->spest = -1;
+      if (GRAPH_DIRECTED_T == g->type)
+      {
+         ((VTX_D_T*)vtx)->aux = aux;
+      }
+      else if (GRAPH_UNDIRECTED_T == g->type)
+      {
+         ((VTX_UD_T*)vtx)->aux = aux;
+      }
+      else
+      {
+         /* XXX: free up all allocated resources here first */
+         return GPH_ERR_ERR;
+      }
+   }
+   svtx = graph_vertex_find_i (g, source_vid);   
+   if (GRAPH_DIRECTED_T == g->type)
+   {
+      ((DS_SP_AUX_T*)(((VTX_D_T*)svtx)->aux))->spest = 0;
+   }
+   else if (GRAPH_UNDIRECTED_T == g->type)
+   {
+      ((DS_SP_AUX_T*)(((VTX_UD_T*)svtx)->aux))->spest = 0;
+   }
+}
+
+/**
+ * @brief relax routine for directed graphs
+ */
+static void relax_directed
+(
+VTX_D_T* u,
+VTX_D_T* v,
+)
+{
+   EDGE_T* e;
+   unsigned long weight;
+
+   e = graph_edge_find (u, v);
+   weight = e->weight;
+   
+   if (D_SP_AUX_SPEST(v) > (D_SP_AUX_SPEST(u) + weight))
+   {
+      D_SP_AUX_SPEST(v) = D_SP_AUX_SPEST(u) + weight;
+      D_SP_AUX_PRED(v) = u;
+   }
+}
+
+/**
+ * @brief relax routine for undirected graphs
+ */
+static void relax_undirected
+(
+VTX_UD_T* u,
+VTX_UD_T* v
+)
+{
+   EDGE_T* e;
+   unsigned long weight;
+   
+   e = graph_edge_find (u, v);
+   weight = e->weight;
+   
+   if (UD_SP_AUX_SPEST(v) > (UD_SP_AUX_SPEST(u) + weight))
+   {
+      UD_SP_AUX_SPEST(v) = UD_SP_AUX_SPEST(u) + weight;
+      UD_SP_AUX_PRED(v) = u;
+   }
+}
+
+/**
+ * @brief relax edge (u ,v)
+ *
+ * Ref: see "Chapter 24 CLSR"
+ * @param[in] u an edge vertex (source vertex for directed graphs)
+ * @param[in] v an edge vertex (destination vertex for directed graphs)
+ * @return GPH_ERR_E
+ *
+ * @code
+ *
+ * RELAX(u, v, w)
+ *    if d[v] > d[u] + w(u, v)
+ *       then d[v] <- d[u] + w(u, v)
+ *            p[v] <- u
+ * @endocde
+*/
+static GPH_ERR_E relax
+(
+void* u,
+void* v,
+)
+{
+   if (GRAPH_DIRECTED_T == g->type)
+   {
+      relax_directed (u, v);
+   }
+   else if (GRAPH_UNDIRECTED_T == g->type)
+   {
+      relax_undirected (u, v);
+   }
+   return GPH_ERR_OK;
+}
+
+/**
+ * @brief breadth-first search for directed graphs
+ *
+ */
 GPH_ERR_E bfs_directed
 (
 GRAPH_T* g,
@@ -129,7 +261,7 @@ BFS_FUNCPTR_T func
    int no;
    
    svtx = graph_vertex_find_i (g, vid);   
-   while (NULL != (vtx = graph_vertex_next_vertex_get (g, vtx)))
+   while (NULL != (vtx = graph_vertex_next_get (g, vtx)))
    {
       aux = malloc (sizeof (DS_BFS_AUX_T));
       if (NULL == aux)
@@ -171,13 +303,17 @@ BFS_FUNCPTR_T func
    }
 
    vtx = NULL;
-   while (NULL != (vtx = graph_vertex_next_vertex_get (g, vtx)))
+   while (NULL != (vtx = graph_vertex_next_get (g, vtx)))
    {
       free (((VTX_D_T*)vtx)->aux);
    }
    return GPH_ERR_OK;
 }
 
+/**
+ * @brief breadth-first search for un-directed graphs
+ *
+ */
 GPH_ERR_E bfs_undirected
 (
 GRAPH_T* g,
@@ -196,7 +332,7 @@ BFS_FUNCPTR_T func
    int no;
    
    svtx = graph_vertex_find_i (g, vid);   
-   while (NULL != (vtx = graph_vertex_next_vertex_get (g, vtx)))
+   while (NULL != (vtx = graph_vertex_next_get (g, vtx)))
    {
       aux = malloc (sizeof (DS_BFS_AUX_T));
       if (NULL == aux)
@@ -237,7 +373,7 @@ BFS_FUNCPTR_T func
    }
 
    vtx = NULL;
-   while (NULL != (vtx = graph_vertex_next_vertex_get (g, vtx)))
+   while (NULL != (vtx = graph_vertex_next_get (g, vtx)))
    {
       free (((VTX_UD_T*)vtx)->aux);
    }
@@ -245,6 +381,8 @@ BFS_FUNCPTR_T func
 }
 
 /**
+ * @brief breadth-first search
+ * 
  * @code
  * BFS(G, s)
  *  1  for each vertex u <- V [G] - {s}
@@ -399,7 +537,7 @@ DFS_FUNCPTR_T func
    DS_DFS_AUX_T* aux;
 
    vtx = NULL;
-   while (NULL != (vtx = graph_vertex_next_vertex_get (g, vtx)))
+   while (NULL != (vtx = graph_vertex_next_get (g, vtx)))
    {
       aux = malloc (sizeof (DS_DFS_AUX_T));
       if (NULL == aux)
@@ -416,7 +554,7 @@ DFS_FUNCPTR_T func
 
    }
    vtx = NULL;
-   while (NULL != (vtx = graph_vertex_next_vertex_get (g, vtx)))
+   while (NULL != (vtx = graph_vertex_next_get (g, vtx)))
    {
       if (g->type == GRAPH_UNDIRECTED_T)
       {

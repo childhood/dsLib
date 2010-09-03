@@ -24,6 +24,11 @@ typedef int(*DFS_FUNCPTR_T)(void*);
 typedef enum {DS_BFS_GRAY=0, DS_BFS_WHITE, DS_BFS_BLACK} DS_BFS_COLOR_E;
 typedef enum {DS_DFS_GRAY=0, DS_DFS_WHITE, DS_DFS_BLACK} DS_DFS_COLOR_E;
 
+typedef struct ds_sp_AUX {
+   long spest;
+   void* pred;
+} DS_SP_AUX_T;
+
 typedef struct ds_bfs_AUX {
    DS_BFS_COLOR_E color;
    long distance;
@@ -35,12 +40,19 @@ typedef struct ds_dfs_AUX {
    struct timespec f_time;
 } DS_DFS_AUX_T;
 
-#define D_AUX_COLOR(VTX)   ((DS_DFS_AUX_T*)((VTX_D_T*)(VTX))->aux)->color
-#define D_AUX_DTIME(VTX)   ((DS_DFS_AUX_T*)((VTX_D_T*)(VTX))->aux)->d_time
-#define D_AUX_FTIME(VTX)   ((DS_DFS_AUX_T*)((VTX_D_T*)(VTX))->aux)->f_time
-#define UD_AUX_COLOR(VTX)   ((DS_DFS_AUX_T*)((VTX_UD_T*)(VTX))->aux)->color
-#define UD_AUX_DTIME(VTX)   ((DS_DFS_AUX_T*)((VTX_UD_T*)(VTX))->aux)->d_time
-#define UD_AUX_FTIME(VTX)   ((DS_DFS_AUX_T*)((VTX_UD_T*)(VTX))->aux)->f_time
+/* macros to access aux information for running dfs/bfs searches */
+#define D_AUX_COLOR(VTX)        ((DS_DFS_AUX_T*)((VTX_D_T*)(VTX))->aux)->color
+#define D_AUX_DTIME(VTX)        ((DS_DFS_AUX_T*)((VTX_D_T*)(VTX))->aux)->d_time
+#define D_AUX_FTIME(VTX)        ((DS_DFS_AUX_T*)((VTX_D_T*)(VTX))->aux)->f_time
+#define UD_AUX_COLOR(VTX)       ((DS_DFS_AUX_T*)((VTX_UD_T*)(VTX))->aux)->color
+#define UD_AUX_DTIME(VTX)       ((DS_DFS_AUX_T*)((VTX_UD_T*)(VTX))->aux)->d_time
+#define UD_AUX_FTIME(VTX)       ((DS_DFS_AUX_T*)((VTX_UD_T*)(VTX))->aux)->f_time
+
+/* macros for accessing aux information for running the shortest path */
+#define D_SP_AUX_SPEST(VTX)     ((DS_SP_AUX_T*)((VTX_D_T*)(VTX))->aux)->spest
+#define D_SP_AUX_PRED(VTX)      ((DS_SP_AUX_T*)((VTX_D_T*)(VTX))->aux)->pred
+#define UD_SP_AUX_SPEST(VTX)    ((DS_SP_AUX_T*)((VTX_UD_T*)(VTX))->aux)->spest
+#define UD_SP_AUX_PRED(VTX)     ((DS_SP_AUX_T*)((VTX_UD_T*)(VTX))->aux)->pred
 
 GRAPH_T* matrix_create (const unsigned long row, const unsigned long column);
 
