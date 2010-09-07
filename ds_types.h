@@ -13,6 +13,7 @@ typedef int (*FUNCPTR2_T)(int arg1, int arg2, int arg3);
 
 typedef enum {DS_NO=1, DS_YES=2} TRUTH_E;
 typedef enum {DS_FALSE=0, DS_TRUE=1} BOOL_E;
+typedef enum {DS_LESS=1, DS_EQUAL, DS_MORE} DS_COMP_E;
 
 typedef union
     {

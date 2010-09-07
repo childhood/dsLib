@@ -14,7 +14,7 @@ OUTDIR	:= $(ARCH)
 TC_OUT  = tc
 
 DS_OBJS = sll.o ds.o graph.o heap.o queue.o graph_ops.o
-TC_OBJS = tc.o tc_graph.o
+TC_OBJS = tc.o tc_graph.o tc_heap.o
 ALGO_OBJS = is_sort.o
 
 all: $(TARGET) $(TC_OUT)

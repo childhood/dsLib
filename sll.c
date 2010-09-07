@@ -564,16 +564,9 @@ SLL_ERR_E sll_delete (SLL_T* sll, ...)
     }
 
 
-/*******************************************************************************
-* sll_remove_first - remove an element from the SLL
-*
-* This routine removes an element from the SLL and returns the element node
-*
-* ARGUMENTS: head - head of the SLL
-*              item - element to be removed
-* RETURNS: 
-*/
-
+/**
+ * @brief remove the first element from the list and return it
+ */
 SLL_NODE* sll_remove_first (SLL_T* sll)
     {
 
@@ -611,12 +604,11 @@ void sll_iter (SLL_T* head)
     }
 
 
-/*******************************************************************************
- * sll_new - create a new SSL
+/**
+ * @brief 
  *
  * RETURNS: SLL_T* if ok; NULL if error
  */
-
 SLL_NODE* sll_find_nth_from_last (SLL_NODE* head, int nth)
     {
     SLL_NODE* nthnode = head;
@@ -634,9 +626,15 @@ SLL_NODE* sll_find_nth_from_last (SLL_NODE* head, int nth)
     }
 
 /**
- * create a new singly linked list
+ * @brief create a new singly linked list
  * 
- * RETURNS: SLL_T* if ok; NULL if error
+ * @param[in] data_type the type of data stored in the linked list
+ * @param[in] iterator the linked list iterator function
+ * @param[in] pre the linked list pre-iterator routine. This routine will be
+ * called before the iterator callback
+ * @param[in] post the linked list post-iterator callback. This routine will
+ * be called after the iterator callback is done.
+ * @return A new linked list (SLL_T*)
  */
 
 SLL_T* sll_new (NODE_DATA_TYPE_E data_type, SLL_ITER_FUNC iterator,

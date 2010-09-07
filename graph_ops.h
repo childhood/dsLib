@@ -24,6 +24,8 @@ typedef int(*DFS_FUNCPTR_T)(void*);
 typedef enum {DS_BFS_GRAY=0, DS_BFS_WHITE, DS_BFS_BLACK} DS_BFS_COLOR_E;
 typedef enum {DS_DFS_GRAY=0, DS_DFS_WHITE, DS_DFS_BLACK} DS_DFS_COLOR_E;
 
+typedef int (*SP_DJ_FP_T)(void* v);
+
 typedef struct ds_sp_AUX {
    long spest;
    void* pred;

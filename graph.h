@@ -116,6 +116,8 @@ typedef enum {
    GPH_ERR_VERTEX_EXISTS = 2   
 } GPH_ERR_E;
 
+#define GRAPH_NO_VERTICES(G)    ((G)->v_no)
+#define GRAPH_NO_EDGES(G)       ((G)->e_no)
 
 #define DEBUG_EDGE_PRINT_I(G,E)                                         \
    do                                                                   \

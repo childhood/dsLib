@@ -18,3 +18,42 @@
  *
  * See README and COPYING for more details.
  */
+
+typedef enum {DS_HEAP_MAX=1, DS_HEAP_MIN=2} DS_HEAP_TYPE_E;
+
+typedef struct ds_heap_node {
+   unsigned long key;
+   void* data;
+} DS_HEAP_NODE_T;
+
+typedef struct ds_heap_t {
+   unsigned long length;
+   unsigned long heap_size;
+   DS_HEAP_NODE_T** nodes;
+   DS_HEAP_TYPE_E type;
+} HEAP_T;
+
+/* heap operation result code  */
+typedef enum {
+   HEAP_ERR_ERROR_HIGH = -512,   /* fencepost */
+   HEAP_ERR_MALLOC_FAIL,
+   HEAP_ERR_WRONG_TYPE,
+   HEAP_ERR_UNDERFLOW,
+   HEAP_ERR_ERR = -1,
+   HEAP_ERR_OK = 0
+} HEAP_ERR_E;
+
+#define HEAP_PARENT(I)  ((I)/2)
+#define HEAP_LEFT(I)    (2*(I) + 1)
+#define HEAP_RIGHT(I)   (2*(I) + 2)
+
+#define HEAP_KEY(H, I)     ((H)->nodes[I]->key)
+#define HEAP_DATA(H, I)     ((H)->nodes[I]->data)
+
+#define HEAP_NIL_KEY    ULONG_MAX
+HEAP_T* heap_create (DS_HEAP_TYPE_E type, unsigned long length);
+HEAP_ERR_E heap_build (HEAP_T* h);
+HEAP_ERR_E heap_add (HEAP_T* h, unsigned long key, void* data);
+HEAP_ERR_E heap_max_heapify (HEAP_T* h, unsigned long i);
+HEAP_ERR_E heap_min_heapify (HEAP_T* h, unsigned long i);
+void heap_dump (HEAP_T* h);

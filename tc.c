@@ -26,5 +26,6 @@ int main (int argc, char** argv)
    //queue_main ();
    //matrix_main();
    //bfs_main ();
-   tc_directed_main();
+   //tc_directed_main();
+   tc_heap_main();
 }
