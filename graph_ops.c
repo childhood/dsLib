@@ -172,14 +172,16 @@ static void relax_directed
 (
 GRAPH_T* g,
 VTX_D_T* u,
-VTX_D_T* v
+VTX_D_T* v,
+unsigned long w
+
 )
 {
-   EDGE_T* e;
-   unsigned long weight;
+   //EDGE_T* e;
+   unsigned long weight = w;
 
-   e = graph_edge_find (g, u, v);
-   weight = e->weight;
+   //e = graph_edge_find (g, u, v);
+   //weight = e->weight;
    
    if (D_SP_AUX_SPEST(v) > (D_SP_AUX_SPEST(u) + weight))
    {
@@ -195,14 +197,15 @@ static void relax_undirected
 (
 GRAPH_T* g,
 VTX_UD_T* u,
-VTX_UD_T* v
+VTX_UD_T* v,
+unsigned long w
 )
 {
-   EDGE_T* e;
-   unsigned long weight;
+   //EDGE_T* e;
+   unsigned long weight = w;
    
-   e = graph_edge_find (g, u, v);
-   weight = e->weight;
+   //e = graph_edge_find (g, u, v);
+   //weight = e->weight;
    
    if (UD_SP_AUX_SPEST(v) > (UD_SP_AUX_SPEST(u) + weight))
    {
@@ -231,16 +234,17 @@ static GPH_ERR_E relax
 (
 GRAPH_T* g,
 void* u,
-void* v
+void* v,
+unsigned long w
 )
 {
    if (GRAPH_DIRECTED_T == g->type)
    {
-      relax_directed (g, u, v);
+      relax_directed (g, u, v, );
    }
    else if (GRAPH_UNDIRECTED_T == g->type)
    {
-      relax_undirected (g, u, v);
+      relax_undirected (g, u, v, w);
    }
    return GPH_ERR_OK;
 }
@@ -250,9 +254,36 @@ void* v
  */
 void sp_dijkstra (GRAPH_T* g, unsigned long s, SP_DJ_FP_T* cb)
 {
-   initialize_single_source (g, s);
-   heap_create (DS_HEAP_MIN, GRAPH_NO_VERTICES(g));
+   HEAP_T* h;
+   VTX_D_T* u = NULL;
+   VTX_D_T* v;
+   unsigned long key;
+   char* ctx = NULL;
+   EDGE_T* e;
    
+   initialize_single_source (g, s);
+   h = heap_create (DS_HEAP_MIN, GRAPH_NO_VERTICES(g));
+
+   while (NULL != (u = graph_vertex_next_get (g, v)))
+   {
+      heap_add (h, HEAP_NIL_KEY, u);
+   }
+   
+   while (HEAP_SIZE(h))
+   {
+      heap_extract_min (HEAP_T* h, &u, &key);
+      cb (u);
+
+      ctx = NULL;
+      no = ((VTX_D_T*)uvtx)->no;
+      while (no)
+      {
+         e = graph_vertex_next_edge_get (g, u, &ctx);
+         relax (g, u, v, e->weight);
+         heap_decrease_key (h, i, unsigned long key);
+         no--;
+      }
+   }
 }
 
 /**

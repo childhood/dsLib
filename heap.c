@@ -118,22 +118,22 @@ HEAP_ERR_E heap_min_heapify (HEAP_T* h, unsigned long i)
    if (h->type == DS_HEAP_MAX)
       return HEAP_ERR_WRONG_TYPE;
    
-   if (l < h->heap_size && (h->nodes[l]->key < h->nodes[i]->key))
+   if (l < h->heap_size && (HEAP_KEY(h, l) < HEAP_KEY(h, i)))
       smallest = l;
-   else
+       else
       smallest = i;
    
-   if (r < h->heap_size && (h->nodes[r]->key < h->nodes[smallest]->key))
+   if (r < h->heap_size && (HEAP_KEY(h, r) < HEAP_KEY(h, smallest)))
       smallest = r;
 
    if (smallest != i)
    {
-      tmp_key = h->nodes[smallest]->key;
-      tmp_data = h->nodes[smallest]->data;
-      h->nodes[smallest]->key = h->nodes[i]->key;
-      h->nodes[smallest]->data = h->nodes[i]->data;
-      h->nodes[i]->key = tmp_key;
-      h->nodes[i]->data = tmp_data;
+      tmp_key = HEAP_KEY(h, smallest);
+      tmp_data = HEAP_DATA(h, smallest);
+      HEAP_KEY(h, smallest) = HEAP_KEY(h, i);
+      HEAP_DATA(h, smallest) = HEAP_DATA(h, i);
+      HEAP_KEY(h, i) = tmp_key;
+      HEAP_DATA(h, i) = tmp_data;
 
       heap_min_heapify (h, smallest);
    }
@@ -307,7 +307,7 @@ HEAP_ERR_E heap_decrease_key (HEAP_T* h, unsigned long i, unsigned long key)
    if (key > HEAP_KEY(h, i))
       return HEAP_ERR_LARGER_KEY;
    HEAP_KEY(h, i) = key;
-   while (i > 1 && (HEAP_KEY(h, HEAP_PARENT(i)) > HEAP_KEY(i)))
+   while (i > 1 && (HEAP_KEY(h, HEAP_PARENT(i)) > HEAP_KEY(h, i)))
    {
       tmp_key = h->nodes[i]->key;
       tmp_data = h->nodes[i]->data;
@@ -350,7 +350,7 @@ HEAP_ERR_E heap_increase_key (HEAP_T* h, unsigned long i, unsigned long key)
       return HEAP_ERR_SMALLER_KEY;
    
    HEAP_KEY(h, i) = key;
-   while (i > 1 && (HEAP_KEY(h, HEAP_PARENT(i)) < HEAP_KEY(i)))
+   while (i > 1 && (HEAP_KEY(h, HEAP_PARENT(i)) < HEAP_KEY(h, i)))
    {
       tmp_key = h->nodes[i]->key;
       tmp_data = h->nodes[i]->data;
