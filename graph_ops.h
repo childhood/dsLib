@@ -29,6 +29,7 @@ typedef int (*SP_DJ_FP_T)(void* v);
 typedef struct ds_sp_AUX {
    long spest;
    void* pred;
+   unsigned long i;
 } DS_SP_AUX_T;
 
 typedef struct ds_bfs_AUX {
@@ -53,6 +54,7 @@ typedef struct ds_dfs_AUX {
 /* macros for accessing aux information for running the shortest path */
 #define D_SP_AUX_SPEST(VTX)     ((DS_SP_AUX_T*)((VTX_D_T*)(VTX))->aux)->spest
 #define D_SP_AUX_PRED(VTX)      ((DS_SP_AUX_T*)((VTX_D_T*)(VTX))->aux)->pred
+#define D_SP_AUX_I(VTX)         ((DS_SP_AUX_T*)((VTX_D_T*)(VTX))->aux)->i
 #define UD_SP_AUX_SPEST(VTX)    ((DS_SP_AUX_T*)((VTX_UD_T*)(VTX))->aux)->spest
 #define UD_SP_AUX_PRED(VTX)     ((DS_SP_AUX_T*)((VTX_UD_T*)(VTX))->aux)->pred
 

@@ -16,26 +16,33 @@ tc_heap_main (void)
    HEAP_T* h;
    unsigned int length;
    unsigned int idx;
-
+   unsigned long i;
+   
    h = heap_create (DS_HEAP_MAX, 14);
    length = sizeof (A)/sizeof (int);
    for (idx = 0; idx < length; idx++)
    {
-      if (HEAP_ERR_ERR == heap_add (h, A[idx], NULL))
+      if (HEAP_ERR_ERR == heap_max_insert (h, A[idx], NULL))
          fprintf (stderr, "error adding heap element\n");
    }
-   heap_build (h);
+   //heap_build (h);
    heap_dump (h);
-   heap_graphviz_description (h, "heap-max-heap.lst");
-   
+   heap_graphviz_description (h, "heap-max-heap-i.lst");
+
+   heap_increase_key (h, 5, 16);
+   heap_dump (h);
+   heap_graphviz_description (h, "heap-max-heap-ii.lst");
+
    h = heap_create (DS_HEAP_MIN, 14);
    length = sizeof (A)/sizeof (int);
    for (idx = 0; idx < length; idx++)
    {
-      if (HEAP_ERR_ERR == heap_add (h, A[idx], NULL))
+      if (HEAP_ERR_ERR == heap_min_insert (h, A[idx], NULL))
          fprintf (stderr, "error adding heap element\n");
    }
-   heap_build (h);
-   heap_graphviz_description (h, "heap-min-heap.lst");
+   //heap_build (h);
    heap_dump (h);
+   heap_graphviz_description (h, "heap-min-heap.lst");
+
+
 }

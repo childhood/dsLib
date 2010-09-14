@@ -138,6 +138,7 @@ unsigned long source_vid
       aux->pred = 0; /* XXX: this is not correct and could land us in trouble.
                         need to find a better way to say NIL */
       aux->spest = -1;
+      aux->i = 0; /* XXX: this is not exactly correct either. Again need to find a better way to say NIL */
       if (GRAPH_DIRECTED_T == g->type)
       {
          ((VTX_D_T*)vtx)->aux = aux;
@@ -240,7 +241,7 @@ unsigned long w
 {
    if (GRAPH_DIRECTED_T == g->type)
    {
-      relax_directed (g, u, v, );
+      relax_directed (g, u, v, w);
    }
    else if (GRAPH_UNDIRECTED_T == g->type)
    {
@@ -266,12 +267,12 @@ void sp_dijkstra (GRAPH_T* g, unsigned long s, SP_DJ_FP_T* cb)
 
    while (NULL != (u = graph_vertex_next_get (g, v)))
    {
-      heap_add (h, HEAP_NIL_KEY, u);
+      heap_min_insert (h, HEAP_NIL_KEY, u, &D_SP_AUX_I(u));
    }
    
    while (HEAP_SIZE(h))
    {
-      heap_extract_min (HEAP_T* h, &u, &key);
+      heap_extract_min (h, (void**)&u, &key);
       cb (u);
 
       ctx = NULL;
@@ -280,7 +281,7 @@ void sp_dijkstra (GRAPH_T* g, unsigned long s, SP_DJ_FP_T* cb)
       {
          e = graph_vertex_next_edge_get (g, u, &ctx);
          relax (g, u, v, e->weight);
-         heap_decrease_key (h, i, unsigned long key);
+         heap_decrease_key (h, v->aux->i, v->aux->spest);
          no--;
       }
    }

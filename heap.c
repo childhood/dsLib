@@ -83,6 +83,7 @@ char* filename
    return HEAP_ERR_OK;
 }
 
+
 /**
  * @brief dump heap keys
  */
@@ -93,7 +94,7 @@ void heap_dump (HEAP_T* h)
    fprintf (stdout, "[Dumping heap (heap_size=%lu)]\n", h->heap_size);
    for (idx = 0; idx < h->heap_size; idx++)
    {
-      fprintf (stdout, "i=%lu -> key=%lu\n", idx+1, h->nodes[idx]->key);
+      fprintf (stdout, "i=%lu -> key=%lu\n", *h->nodes[idx]->i, h->nodes[idx]->key);
    }
 }
 
@@ -113,6 +114,7 @@ HEAP_ERR_E heap_min_heapify (HEAP_T* h, unsigned long i)
    unsigned long r = HEAP_RIGHT(i);
    unsigned long smallest;
    unsigned long tmp_key;
+   unsigned long* tmp_i;
    void* tmp_data;
 
    if (h->type == DS_HEAP_MAX)
@@ -130,10 +132,13 @@ HEAP_ERR_E heap_min_heapify (HEAP_T* h, unsigned long i)
    {
       tmp_key = HEAP_KEY(h, smallest);
       tmp_data = HEAP_DATA(h, smallest);
+      tmp_i = HEAP_I(h, smallest);
       HEAP_KEY(h, smallest) = HEAP_KEY(h, i);
       HEAP_DATA(h, smallest) = HEAP_DATA(h, i);
+      HEAP_I(h, smallest) = HEAP_I(h, i);
       HEAP_KEY(h, i) = tmp_key;
       HEAP_DATA(h, i) = tmp_data;
+      HEAP_I(h, i) = tmp_i;
 
       heap_min_heapify (h, smallest);
    }
@@ -156,6 +161,7 @@ HEAP_ERR_E heap_max_heapify (HEAP_T* h, unsigned long i)
    unsigned long r = HEAP_RIGHT(i);
    unsigned long largest;
    unsigned long tmp_key;
+   unsigned long* tmp_i;
    void* tmp_data;
 
    //fprintf (stdout, "i=%lu; l=%lu; r=%lu\n", i, l, r);
@@ -174,10 +180,13 @@ HEAP_ERR_E heap_max_heapify (HEAP_T* h, unsigned long i)
    {
       tmp_key = h->nodes[largest]->key;
       tmp_data = h->nodes[largest]->data;
+      tmp_i = h->nodes[largest]->i;
       h->nodes[largest]->key = h->nodes[i]->key;
       h->nodes[largest]->data = h->nodes[i]->data;
+      h->nodes[largest]->i = h->nodes[i]->i;
       h->nodes[i]->key = tmp_key;
       h->nodes[i]->data = tmp_data;
+      h->nodes[i]->i = tmp_i;
 
       heap_max_heapify (h, largest);
    }
@@ -292,30 +301,37 @@ HEAP_ERR_E heap_maximum (HEAP_T* h, void** data, unsigned long* key)
  * @brief decrease the key value of a heap element
  *
  * @param[in] g The heap to operate on
- * @param[out] data The application object attached with the key
- * @param[out] key The application object key
+ * @param[in] data The application object attached with the key
+ * @param[in] key The application object key
  * @return HEAP_ERR_E
  */
 HEAP_ERR_E heap_decrease_key (HEAP_T* h, unsigned long i, unsigned long key)
 {
    void* tmp_data;
    unsigned long tmp_key;
+   unsigned long* tmp_i;
    
    if (DS_HEAP_MIN != h->type)
       return HEAP_ERR_WRONG_TYPE;
-   
-   if (key > HEAP_KEY(h, i))
+
+   if (key == HEAP_NIL_KEY)
+      return HEAP_ERR_INVALID_KEY;
+
+   if (HEAP_KEY(h, i) != HEAP_NIL_KEY && key > HEAP_KEY(h, i))
       return HEAP_ERR_LARGER_KEY;
+
    HEAP_KEY(h, i) = key;
-   while (i > 1 && (HEAP_KEY(h, HEAP_PARENT(i)) > HEAP_KEY(h, i)))
+   while (i > 0 && (HEAP_KEY(h, HEAP_PARENT(i)) > HEAP_KEY(h, i)))
    {
       tmp_key = h->nodes[i]->key;
       tmp_data = h->nodes[i]->data;
+      tmp_i = h->nodes[i]->i;
       h->nodes[i]->key = h->nodes[HEAP_PARENT(i)]->key;
       h->nodes[i]->data = h->nodes[HEAP_PARENT(i)]->data;
+      h->nodes[i]->i = h->nodes[HEAP_PARENT(i)]->i;
       h->nodes[HEAP_PARENT(i)]->key = tmp_key;
       h->nodes[HEAP_PARENT(i)]->data = tmp_data;
-
+      h->nodes[HEAP_PARENT(i)]->i = tmp_i;
       i = HEAP_PARENT(i);
    }
    
@@ -334,8 +350,8 @@ HEAP_ERR_E heap_decrease_key (HEAP_T* h, unsigned long i, unsigned long key)
  * 6         i <- PARENT(i)
  * 
  * @param[in] g The heap to operate on
- * @param[out] data The application object attached with the key
- * @param[out] key The application object key
+ * @param[in] data The application object attached with the key
+ * @param[in] key The application object key
  * @return HEAP_ERR_E
  */
 HEAP_ERR_E heap_increase_key (HEAP_T* h, unsigned long i, unsigned long key)
@@ -345,48 +361,34 @@ HEAP_ERR_E heap_increase_key (HEAP_T* h, unsigned long i, unsigned long key)
 
    if (DS_HEAP_MAX != h->type)
       return HEAP_ERR_WRONG_TYPE;
+
+   if (key == HEAP_NIL_KEY)
+      return HEAP_ERR_INVALID_KEY;
    
-   if (key != HEAP_NIL_KEY && key < HEAP_KEY(h, i))
+   if (HEAP_KEY(h, i) != HEAP_NIL_KEY && key < HEAP_KEY(h, i))
       return HEAP_ERR_SMALLER_KEY;
    
    HEAP_KEY(h, i) = key;
-   while (i > 1 && (HEAP_KEY(h, HEAP_PARENT(i)) < HEAP_KEY(h, i)))
+   while (i > 0 && (HEAP_KEY(h, HEAP_PARENT(i)) < HEAP_KEY(h, i)))
    {
+      /*
+        XXX: to-do: just swap the pointer instead
+        void* tmp;
+
+        tmp = h->nodes[i];
+        h->nodes[i] = h->nodes[HEAP_PARENT(i)];
+        h->nodes[HEAP_PARENT(i)] = tmp;
+      */
       tmp_key = h->nodes[i]->key;
       tmp_data = h->nodes[i]->data;
       h->nodes[i]->key = h->nodes[HEAP_PARENT(i)]->key;
       h->nodes[i]->data = h->nodes[HEAP_PARENT(i)]->data;
       h->nodes[HEAP_PARENT(i)]->key = tmp_key;
       h->nodes[HEAP_PARENT(i)]->data = tmp_data;
-
       i = HEAP_PARENT(i);
    }
    
    return HEAP_ERR_OK;
-}
-
-/**
- *
- */
-HEAP_ERR_E heap_max_insert (HEAP_T* h, unsigned long key, void* data)
-{
-   if (h->type != DS_HEAP_MAX)
-      return HEAP_ERR_WRONG_TYPE;
-
-   heap_add (h, HEAP_NIL_KEY, data);
-   heap_increase_key (h, h->heap_size, key);
-}
-
-/**
- *
- */
-HEAP_ERR_E heap_min_insert (HEAP_T* h, unsigned long key, void* data)
-{
-   if (h->type != DS_HEAP_MAX)
-      return HEAP_ERR_WRONG_TYPE;
-
-   heap_add (h, HEAP_NIL_KEY, data);
-   heap_decrease_key (h, h->heap_size, key);
 }
 
 /**
@@ -399,7 +401,7 @@ HEAP_ERR_E heap_min_insert (HEAP_T* h, unsigned long key, void* data)
  * @param[in] data Array of data elements
  * @param[in] num Number of array elements
  */
-HEAP_ERR_E heap_add (HEAP_T* h, unsigned long key, void* data)
+static HEAP_ERR_E heap_add (HEAP_T* h, unsigned long key, void* data, unsigned long* i)
 {
    DS_HEAP_NODE_T* node;
    
@@ -409,9 +411,46 @@ HEAP_ERR_E heap_add (HEAP_T* h, unsigned long key, void* data)
    
    node->data = data;
    node->key = key;
+   *i = h->heap_size;
+   node->i = i;
    h->nodes[h->heap_size] = node;
    h->heap_size++;
 
+   return HEAP_ERR_OK;
+}
+
+/**
+ * @brief insert an element in a max heap
+ *
+ * This routine inserts an element in the heap. The element is a {key,data}
+ * pair.
+ *
+ * @param[in] h The heap to operate on
+ * @param[in] key The element key component
+ * @param[in] data The element data component
+ * @param[out] i The updated heap index for the {key, data} will be stored here.
+ * @return HEAP_ERR_E
+ */
+HEAP_ERR_E heap_max_insert (HEAP_T* h, unsigned long key, void* data, unsigned long* i)
+{
+   if (h->type != DS_HEAP_MAX)
+      return HEAP_ERR_WRONG_TYPE;
+
+   heap_add (h, HEAP_NIL_KEY, data, i);
+   heap_increase_key (h, h->heap_size-1, key);
+   return HEAP_ERR_OK;
+}
+
+/**
+ *
+ */
+HEAP_ERR_E heap_min_insert (HEAP_T* h, unsigned long key, void* data, unsigned long* i)
+{
+   if (h->type != DS_HEAP_MIN)
+      return HEAP_ERR_WRONG_TYPE;
+
+   heap_add (h, HEAP_NIL_KEY, data, i);
+   heap_decrease_key (h, h->heap_size-1, key);
    return HEAP_ERR_OK;
 }
 
