@@ -58,17 +58,19 @@ void tc_graph_edge_print (GRAPH_T* g)
    {
       if (g->type == GRAPH_UNDIRECTED_T)
       {
-         fprintf (stdout, "edge (%s) v1=%lu v2=%lu\n",
+         fprintf (stdout, "edge (%s) v1=%lu v2=%lu, weight=%lu\n",
                   (char*)e->aux, 
                   ((VTX_UD_T*)e->v1)->id.iid,
-                  ((VTX_UD_T*)e->v2)->id.iid);
+                  ((VTX_UD_T*)e->v2)->id.iid,
+                  (char*)e->weight);
       }
       else if (g->type == GRAPH_DIRECTED_T)
       {
-         fprintf (stdout, "edge (%s) v1=%lu v2=%lu\n",
+         fprintf (stdout, "edge (%s) v1=%lu v2=%lu, weight=%lu\n",
                   (char*)e->aux, 
                   ((VTX_D_T*)e->v1)->id.iid,
-                  ((VTX_D_T*)e->v2)->id.iid);
+                  ((VTX_D_T*)e->v2)->id.iid,
+                  (char*)e->weight);
       }
    }
 }
@@ -295,15 +297,14 @@ int sp_dj_cb (void* v)
 /**
  * @brief Testing construction of a directed graph.
  *
- *       1-->2  ->3-->>4 
- *       |   | /  | /  |
- *       |   |/   |/   |
- *       v   v    v    v
- *       5   6--->7--->8
- *           |
- *           |
- *           V
- *           9
+ *        +------->t/2----->------>x/4
+ *        |        |^     /        |^
+ *        |        ||    /         ||
+ *       s/1------ ||---/-->----+  ||
+ *        |        ||  /         \ ||
+ *        |        V| /           \V|
+ *        +------->y/3------------>z/5
+ *
  */
 void tc_dj_main (void)
 {
@@ -312,29 +313,25 @@ void tc_dj_main (void)
    fprintf (stderr, "graph test #1\n");
    g = graph_new (GRAPH_DIRECTED_T, GRAPH_INT_T);
    fprintf (stderr, "* inserting e1(1,2)\n");
-   graph_add_i (g, "e1", 1, NULL, 2, NULL, 1, DS_TRUE);
-   fprintf (stderr, "* inserting e2(1,5)\n");   
-   graph_add_i (g, "e2", 1, NULL, 5, NULL, 1, DS_TRUE);
-   fprintf (stderr, "* inserting e3(2,6)\n");      
-   graph_add_i (g, "e3", 2, NULL, 6, NULL, 1, DS_TRUE);
-   fprintf (stderr, "* inserting e4(6,7)\n");         
-   graph_add_i (g, "e4", 6, NULL, 7, NULL, 1, DS_TRUE);
-   fprintf (stderr, "* inserting e5(3,7)\n");            
-   graph_add_i (g, "e5", 3, NULL, 7, NULL, 1, DS_TRUE);
+   graph_add_i (g, "e1", 1, NULL, 2, NULL, 10, DS_TRUE);
+   fprintf (stderr, "* inserting e2(1,3)\n");   
+   graph_add_i (g, "e2", 1, NULL, 3, NULL, 5, DS_TRUE);
+   fprintf (stderr, "* inserting e3(2,4)\n");      
+   graph_add_i (g, "e3", 2, NULL, 4, NULL, 1, DS_TRUE);
+   fprintf (stderr, "* inserting e4(2,3)\n");         
+   graph_add_i (g, "e4", 2, NULL, 3, NULL, 2, DS_TRUE);
+   fprintf (stderr, "* inserting e5(3,2)\n");            
+   graph_add_i (g, "e5", 3, NULL, 2, NULL, 3, DS_TRUE);
    fprintf (stderr, "* inserting e6(3,4)\n");            
-   graph_add_i (g, "e6", 3, NULL, 4, NULL, 1, DS_TRUE);
-   fprintf (stderr, "* inserting e7(7,8)\n");            
-   graph_add_i (g, "e7", 7, NULL, 8, NULL, 1, DS_TRUE);
-   fprintf (stderr, "* inserting e8(4,8)\n");            
-   graph_add_i (g, "e8", 4, NULL, 8, NULL, 1, DS_TRUE);
-   fprintf (stderr, "* inserting e9(6,3)\n");               
-   graph_add_i (g, "e9", 6, NULL, 3, NULL, 1, DS_TRUE);
-   fprintf (stderr, "* inserting e10(7,4)\n");               
-   graph_add_i (g, "e10", 7, NULL, 4, NULL, 1, DS_TRUE);
-   if (GPH_ERR_EDGE_EXISTS == graph_add_i (g, "e11", 4, NULL, 7, NULL, 1, DS_TRUE))
-      fprintf (stderr, "edge exists\n");
-   fprintf (stderr, "* inserting e10(6,9)\n");               
-   graph_add_i (g, "e12", 6, NULL, 9, NULL, 1, DS_TRUE);
+   graph_add_i (g, "e6", 3, NULL, 4, NULL, 9, DS_TRUE);
+   fprintf (stderr, "* inserting e7(3,5)\n");            
+   graph_add_i (g, "e7", 3, NULL, 5, NULL, 2, DS_TRUE);
+   fprintf (stderr, "* inserting e8(4,5)\n");            
+   graph_add_i (g, "e8", 4, NULL, 5, NULL, 4, DS_TRUE);
+   fprintf (stderr, "* inserting e9(5,4)\n");               
+   graph_add_i (g, "e9", 5, NULL, 4, NULL, 6, DS_TRUE);
+   fprintf (stderr, "* inserting e10(5,1)\n");               
+   graph_add_i (g, "e10", 5, NULL, 1, NULL, 7, DS_TRUE);
    
    fprintf (stderr, "Done inserting edges\n");
    tc_graph_edge_print (g);

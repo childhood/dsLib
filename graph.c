@@ -521,7 +521,7 @@ VTX_D_T* v2     /* ed */
          no++;
       }
    }
-   return e;
+   return NULL;
 }
 
 /**

@@ -273,10 +273,11 @@ void sp_dijkstra (GRAPH_T* g, unsigned long s, SP_DJ_FP_T cb)
    {
       heap_min_insert (h, D_SP_AUX_SPEST(u), u, &D_SP_AUX_I(u));
    }
-   heap_dump (h);
+
    while (HEAP_SIZE(h))
    {
       heap_extract_min (h, &p, &key);
+      //heap_dump (h);
       u = (VTX_D_T*)p;
       cb (u);
 
@@ -295,6 +296,14 @@ void sp_dijkstra (GRAPH_T* g, unsigned long s, SP_DJ_FP_T cb)
          no--;
       }
    }
+
+   // debug
+   v = NULL;
+   while (NULL != (v = graph_vertex_next_get (g, v)))
+   {
+      fprintf (stderr, "sp=%lu\n", D_SP_AUX_SPEST(v));
+   }
+   
 }
 
 /**
