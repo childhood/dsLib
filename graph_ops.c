@@ -253,14 +253,15 @@ unsigned long w
 /*
  *
  */
-void sp_dijkstra (GRAPH_T* g, unsigned long s, SP_DJ_FP_T* cb)
+void sp_dijkstra (GRAPH_T* g, unsigned long s, SP_DJ_FP_T cb)
 {
    HEAP_T* h;
    VTX_D_T* u = NULL;
    VTX_D_T* v;
-   unsigned long key;
+   unsigned long key, no;
    char* ctx = NULL;
    EDGE_T* e;
+   void* p;
    
    initialize_single_source (g, s);
    h = heap_create (DS_HEAP_MIN, GRAPH_NO_VERTICES(g));
@@ -272,16 +273,17 @@ void sp_dijkstra (GRAPH_T* g, unsigned long s, SP_DJ_FP_T* cb)
    
    while (HEAP_SIZE(h))
    {
-      heap_extract_min (h, (void**)&u, &key);
+      heap_extract_min (h, &p, &key);
+      u = (VTX_D_T*)p;
       cb (u);
 
       ctx = NULL;
-      no = ((VTX_D_T*)uvtx)->no;
+      no = ((VTX_D_T*)u)->no;
       while (no)
       {
          e = graph_vertex_next_edge_get (g, u, &ctx);
          relax (g, u, v, e->weight);
-         heap_decrease_key (h, v->aux->i, v->aux->spest);
+         heap_decrease_key (h, D_SP_AUX_I(v), D_SP_AUX_SPEST(v));
          no--;
       }
    }

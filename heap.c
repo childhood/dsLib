@@ -59,20 +59,20 @@ char* filename
 
    weight = h->heap_size;
    if (HEAP_LEFT(idx) < h->heap_size)
-      fprintf (fp, "\t%lu -- %lu [weight=%lu];\n ", HEAP_KEY(h, idx),
-               HEAP_KEY(h, HEAP_LEFT(idx)), weight);
+      fprintf (fp, "\t%lu -- %lu [weight=%lu, label = \"%lu\"];\n ", HEAP_KEY(h, idx),
+               HEAP_KEY(h, HEAP_LEFT(idx)), weight, *HEAP_I(h, HEAP_LEFT(idx)));
    if (HEAP_RIGHT(idx) < h->heap_size)
-      fprintf (fp, "\t%lu -- %lu [weight=%lu];\n", HEAP_KEY(h, idx),
-               HEAP_KEY(h, HEAP_RIGHT(idx)), weight);
+      fprintf (fp, "\t%lu -- %lu [weight=%lu, label = \"%lu\"];\n", HEAP_KEY(h, idx),
+               HEAP_KEY(h, HEAP_RIGHT(idx)), weight, *HEAP_I(h, HEAP_RIGHT(idx)));
    
    for (idx = 1; idx < h->heap_size; idx++)
    {
       if (HEAP_LEFT(idx) < h->heap_size)
-         fprintf (fp, "\t%lu -- %lu;\n ", HEAP_KEY(h, idx),
-                  HEAP_KEY(h, HEAP_LEFT(idx)));
+         fprintf (fp, "\t%lu -- %lu [label = \"%lu\"]; \n ", HEAP_KEY(h, idx),
+                  HEAP_KEY(h, HEAP_LEFT(idx)), *HEAP_I(h, HEAP_LEFT(idx)));
       if (HEAP_RIGHT(idx) < h->heap_size)
-         fprintf (fp, "\t%lu -- %lu;\n", HEAP_KEY(h, idx),
-                  HEAP_KEY(h, HEAP_RIGHT(idx)));
+         fprintf (fp, "\t%lu -- %lu [label = \"%lu\"];\n", HEAP_KEY(h, idx),
+                  HEAP_KEY(h, HEAP_RIGHT(idx)), *HEAP_I(h, HEAP_RIGHT(idx)));
    }
    
    fprintf (fp, "}\n");
@@ -94,7 +94,8 @@ void heap_dump (HEAP_T* h)
    fprintf (stdout, "[Dumping heap (heap_size=%lu)]\n", h->heap_size);
    for (idx = 0; idx < h->heap_size; idx++)
    {
-      fprintf (stdout, "i=%lu -> key=%lu\n", *h->nodes[idx]->i, h->nodes[idx]->key);
+      fprintf (stdout, "i=%lu -> key=%lu\n",
+               (h->nodes[idx]->i)?*h->nodes[idx]->i:0, h->nodes[idx]->key);
    }
 }
 
@@ -310,7 +311,7 @@ HEAP_ERR_E heap_decrease_key (HEAP_T* h, unsigned long i, unsigned long key)
    void* tmp_data;
    unsigned long tmp_key;
    unsigned long* tmp_i;
-   
+
    if (DS_HEAP_MIN != h->type)
       return HEAP_ERR_WRONG_TYPE;
 
@@ -321,6 +322,7 @@ HEAP_ERR_E heap_decrease_key (HEAP_T* h, unsigned long i, unsigned long key)
       return HEAP_ERR_LARGER_KEY;
 
    HEAP_KEY(h, i) = key;
+
    while (i > 0 && (HEAP_KEY(h, HEAP_PARENT(i)) > HEAP_KEY(h, i)))
    {
       tmp_key = h->nodes[i]->key;
@@ -369,6 +371,7 @@ HEAP_ERR_E heap_increase_key (HEAP_T* h, unsigned long i, unsigned long key)
       return HEAP_ERR_SMALLER_KEY;
    
    HEAP_KEY(h, i) = key;
+   printf ("inserting key = %lu\n", HEAP_KEY(h,i));         
    while (i > 0 && (HEAP_KEY(h, HEAP_PARENT(i)) < HEAP_KEY(h, i)))
    {
       /*
@@ -411,7 +414,8 @@ static HEAP_ERR_E heap_add (HEAP_T* h, unsigned long key, void* data, unsigned l
    
    node->data = data;
    node->key = key;
-   *i = h->heap_size;
+   if (NULL != i)
+      *i = h->heap_size;
    node->i = i;
    h->nodes[h->heap_size] = node;
    h->heap_size++;
