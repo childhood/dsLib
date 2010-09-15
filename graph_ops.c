@@ -137,7 +137,7 @@ unsigned long source_vid
          return GPH_ERR_ERR;
       aux->pred = 0; /* XXX: this is not correct and could land us in trouble.
                         need to find a better way to say NIL */
-      aux->spest = -1;
+      aux->spest = HEAP_NIL_KEY;
       aux->i = 0; /* XXX: this is not exactly correct either. Again need to find a better way to say NIL */
       if (GRAPH_DIRECTED_T == g->type)
       {
@@ -183,7 +183,6 @@ unsigned long w
 
    //e = graph_edge_find (g, u, v);
    //weight = e->weight;
-   
    if (D_SP_AUX_SPEST(v) > (D_SP_AUX_SPEST(u) + weight))
    {
       D_SP_AUX_SPEST(v) = D_SP_AUX_SPEST(u) + weight;
@@ -250,8 +249,12 @@ unsigned long w
    return GPH_ERR_OK;
 }
 
-/*
+/**
+ * @brief Dijkstra's shortest path algorithm 
  *
+ * @param[in] g The graph to operate on
+ * @param[in] s The starting vertex
+ * @param[in] cb The function to call when a shortest spath vertex is determined.  
  */
 void sp_dijkstra (GRAPH_T* g, unsigned long s, SP_DJ_FP_T cb)
 {
@@ -266,11 +269,11 @@ void sp_dijkstra (GRAPH_T* g, unsigned long s, SP_DJ_FP_T cb)
    initialize_single_source (g, s);
    h = heap_create (DS_HEAP_MIN, GRAPH_NO_VERTICES(g));
 
-   while (NULL != (u = graph_vertex_next_get (g, v)))
+   while (NULL != (u = graph_vertex_next_get (g, u)))
    {
-      heap_min_insert (h, HEAP_NIL_KEY, u, &D_SP_AUX_I(u));
+      heap_min_insert (h, D_SP_AUX_SPEST(u), u, &D_SP_AUX_I(u));
    }
-   
+   heap_dump (h);
    while (HEAP_SIZE(h))
    {
       heap_extract_min (h, &p, &key);
@@ -282,8 +285,13 @@ void sp_dijkstra (GRAPH_T* g, unsigned long s, SP_DJ_FP_T cb)
       while (no)
       {
          e = graph_vertex_next_edge_get (g, u, &ctx);
+         if (e->v1 == u)
+            v = e->v2;
+         else
+            v = e->v1;
          relax (g, u, v, e->weight);
          heap_decrease_key (h, D_SP_AUX_I(v), D_SP_AUX_SPEST(v));
+         heap_dump (h);
          no--;
       }
    }
