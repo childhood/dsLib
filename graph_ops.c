@@ -55,15 +55,30 @@ char* filename
       if (NULL == fp)
          return GPH_ERR_ERR;
    }
-   
-   fprintf (fp, "graph G {\n");
+
+   if (g->type == GRAPH_DIRECTED_T)
+   {
+         fprintf (fp, "digraph G {\n");
+   }
+   else
+   {
+         fprintf (fp, "graph G {\n");
+   }
    fprintf (fp, "node [shape = circle, style=filled];\n");
    fprintf (fp, "rankdir=LR;\n");
    fprintf (fp, "size=\"12,8\"\n");   
    while (NULL != (e = graph_edge_next_get (g, e)))
    {
-      fprintf (fp, "\t%lu -- %lu;\n", ((VTX_UD_T*)e->v1)->id.iid,
+      if (g->type == GRAPH_UNDIRECTED_T)
+      {
+      fprintf (fp, "\t%lu -- %lu [weight=%lu, label = \"\"];\n", ((VTX_UD_T*)e->v1)->id.iid,
                ((VTX_UD_T*)e->v2)->id.iid);
+      }
+      else
+      {
+      fprintf (fp, "\t%lu -> %lu [label = \"%lu\"];\n", ((VTX_D_T*)e->v1)->id.iid,
+               ((VTX_D_T*)e->v2)->id.iid, e->weight);
+      }
    }
    fprintf (fp, "}\n");
 
@@ -249,6 +264,19 @@ unsigned long w
    return GPH_ERR_OK;
 }
 
+void heap_dump_ii (HEAP_T* h)
+{
+   unsigned long idx;
+
+   fprintf (stdout, "[Dumping heap (heap_size=%lu)]\n", h->heap_size);
+   for (idx = 0; idx < h->heap_size; idx++)
+   {
+      fprintf (stdout, "i=%lu: key=%lu, vid=%lu\n",
+               (h->nodes[idx]->i)?*h->nodes[idx]->i:0, h->nodes[idx]->key,
+               ((VTX_D_T*)h->nodes[idx]->data)->id.iid);
+   }
+}
+
 /**
  * @brief Dijkstra's shortest path algorithm 
  *
@@ -274,10 +302,13 @@ void sp_dijkstra (GRAPH_T* g, unsigned long s, SP_DJ_FP_T cb)
       heap_min_insert (h, D_SP_AUX_SPEST(u), u, &D_SP_AUX_I(u));
    }
 
+   heap_dump (h);
    while (HEAP_SIZE(h))
    {
+      printf ("DUMP 1\n");
+      heap_dump_ii (h);
+
       heap_extract_min (h, &p, &key);
-      //heap_dump (h);
       u = (VTX_D_T*)p;
       cb (u);
 
@@ -290,9 +321,13 @@ void sp_dijkstra (GRAPH_T* g, unsigned long s, SP_DJ_FP_T cb)
             v = e->v2;
          else
             v = e->v1;
+         if (v->id.iid == s)
+            continue;
+         printf ("Relaxing v=%lu (u=%lu w=%lu)", v->id.iid, u->id.iid, e->weight);
          relax (g, u, v, e->weight);
          heap_decrease_key (h, D_SP_AUX_I(v), D_SP_AUX_SPEST(v));
-         heap_dump (h);
+         printf ("DUMP 2\n");
+         heap_dump_ii (h);
          no--;
       }
    }
@@ -301,7 +336,7 @@ void sp_dijkstra (GRAPH_T* g, unsigned long s, SP_DJ_FP_T cb)
    v = NULL;
    while (NULL != (v = graph_vertex_next_get (g, v)))
    {
-      fprintf (stderr, "sp=%lu\n", D_SP_AUX_SPEST(v));
+      fprintf (stderr, "vid = %lu sp=%lu\n", v->id.iid, D_SP_AUX_SPEST(v));
    }
    
 }

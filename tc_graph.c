@@ -342,3 +342,77 @@ void tc_dj_main (void)
 
 
 }
+
+
+/**
+ * @brief Testing construction of a directed graph.
+ *
+ *        +------->t/2----->------>x/4
+ *        |        |^     /        |^
+ *        |        ||    /         ||
+ *       s/1------ ||---/-->----+  ||
+ *        |        ||  /         \ ||
+ *        |        V| /           \V|
+ *        +------->y/3------------>z/5
+ *
+ */
+void tc_dj_ii_main (void)
+{
+   GRAPH_T* g;
+   
+   fprintf (stderr, "graph test #1\n");
+   g = graph_new (GRAPH_DIRECTED_T, GRAPH_INT_T);
+   fprintf (stderr, "* inserting e1(1,2)\n");
+   graph_add_i (g, "e1", 1, NULL, 2, NULL, 1, DS_TRUE);
+   fprintf (stderr, "* inserting e2(1,3)\n");   
+   graph_add_i (g, "e2", 1, NULL, 3, NULL, 3, DS_TRUE);
+   fprintf (stderr, "* inserting e3(1,11)\n");      
+   graph_add_i (g, "e3", 1, NULL, 11, NULL, 1, DS_TRUE);
+   fprintf (stderr, "* inserting e4(2,4)\n");         
+   graph_add_i (g, "e4", 2, NULL, 4, NULL, 10, DS_TRUE);
+   fprintf (stderr, "* inserting e5(2,7)\n");            
+   graph_add_i (g, "e5", 2, NULL, 7, NULL, 2, DS_TRUE);
+   fprintf (stderr, "* inserting e6(3,5)\n");            
+   graph_add_i (g, "e6", 3, NULL, 5, NULL, 1, DS_TRUE);
+   fprintf (stderr, "* inserting e7(3,4)\n");            
+   graph_add_i (g, "e7", 3, NULL, 4, NULL, 4, DS_TRUE);
+   //fprintf (stderr, "* inserting e8(4,3)\n");            
+   //graph_add_i (g, "e8", 4, NULL, 3, NULL, 4, DS_TRUE);
+   fprintf (stderr, "* inserting e9(4,8)\n");               
+   graph_add_i (g, "e9", 4, NULL, 8, NULL, 2, DS_TRUE);
+   fprintf (stderr, "* inserting e10(4,9)\n");               
+   graph_add_i (g, "e10", 4, NULL, 9, NULL, 6, DS_TRUE);
+
+   fprintf (stderr, "* inserting e11(5,6)\n");               
+   graph_add_i (g, "e11", 5, NULL, 6, NULL, 2, DS_TRUE);
+   fprintf (stderr, "* inserting e12(6,4)\n");               
+   graph_add_i (g, "e12", 6, NULL, 4, NULL, 1, DS_TRUE);
+
+   fprintf (stderr, "* inserting e13(6,9)\n");               
+   graph_add_i (g, "e13", 6, NULL, 9, NULL, 5, DS_TRUE);
+   fprintf (stderr, "* inserting e14(7,3)\n");               
+   graph_add_i (g, "e14", 7, NULL, 3, NULL, 1, DS_TRUE);
+
+   fprintf (stderr, "* inserting e15(7,10)\n");               
+   graph_add_i (g, "e15", 7, NULL, 10, NULL, 1, DS_TRUE);
+   fprintf (stderr, "* inserting e16(8,9)\n");               
+   graph_add_i (g, "e16", 8, NULL, 9, NULL, 2, DS_TRUE);
+
+   fprintf (stderr, "* inserting e17(10,4)\n");               
+   graph_add_i (g, "e17", 10, NULL, 4, NULL, 2, DS_TRUE);
+   fprintf (stderr, "* inserting e18(10,8)\n");               
+   graph_add_i (g, "e18", 10, NULL, 8, NULL, 2, DS_TRUE);
+
+   fprintf (stderr, "* inserting e19(11,5)\n");               
+   graph_add_i (g, "e19", 11, NULL, 5, NULL, 1, DS_TRUE);
+   
+   fprintf (stderr, "Done inserting edges\n");
+   graphviz_description (g, "graph.lst");
+   tc_graph_edge_print (g);
+   tc_graph_vertex_print (g);
+
+   fprintf (stderr, "Starting Dijkstra's\n");
+   sp_dijkstra (g, 1,  sp_dj_cb);
+
+
+}

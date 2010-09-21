@@ -32,6 +32,7 @@ typedef struct ds_heap_node
 
 typedef struct ds_heap_t {
    unsigned long length;
+   unsigned long avail_index;
    unsigned long heap_size;
    DS_HEAP_NODE_T** nodes;
    DS_HEAP_TYPE_E type;
@@ -50,14 +51,15 @@ typedef enum {
    HEAP_ERR_OK = 0
 } HEAP_ERR_E;
 
-#define HEAP_PARENT(I)  ((I)/2)
+#define HEAP_PARENT(I)  ((I)?((I-1)/2):0)
 #define HEAP_LEFT(I)    (2*(I) + 1)
 #define HEAP_RIGHT(I)   (2*(I) + 2)
 
-#define HEAP_KEY(H, I)  ((H)->nodes[I]->key)
-#define HEAP_DATA(H, I) ((H)->nodes[I]->data)
-#define HEAP_I(H, I)    ((H)->nodes[I]->i)
-#define HEAP_SIZE(H)    ((H)->heap_size)
+#define HEAP_KEY(H, I)          ((H)->nodes[I]->key)
+#define HEAP_DATA(H, I)         ((H)->nodes[I]->data)
+#define HEAP_I(H, I)            ((H)->nodes[I]->i)
+#define HEAP_I_VAL(H, I)        (*((H)->nodes[I]->i))
+#define HEAP_SIZE(H)            ((H)->heap_size)
 
 #define HEAP_NIL_KEY    ULONG_MAX
 HEAP_T* heap_create (DS_HEAP_TYPE_E type, unsigned long length);

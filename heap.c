@@ -140,7 +140,8 @@ HEAP_ERR_E heap_min_heapify (HEAP_T* h, unsigned long i)
       HEAP_KEY(h, i) = tmp_key;
       HEAP_DATA(h, i) = tmp_data;
       HEAP_I(h, i) = tmp_i;
-
+      HEAP_I_VAL(h, i) = i;
+      HEAP_I_VAL(h, smallest) = smallest;
       heap_min_heapify (h, smallest);
    }
    return HEAP_ERR_OK;
@@ -188,7 +189,8 @@ HEAP_ERR_E heap_max_heapify (HEAP_T* h, unsigned long i)
       h->nodes[i]->key = tmp_key;
       h->nodes[i]->data = tmp_data;
       h->nodes[i]->i = tmp_i;
-
+      *h->nodes[i]->i = i;
+      *h->nodes[largest]->i = largest;
       heap_max_heapify (h, largest);
    }
    return HEAP_ERR_OK;
@@ -311,7 +313,7 @@ HEAP_ERR_E heap_decrease_key (HEAP_T* h, unsigned long i, unsigned long key)
    void* tmp_data;
    unsigned long tmp_key;
    unsigned long* tmp_i;
-
+   
    if (DS_HEAP_MIN != h->type)
       return HEAP_ERR_WRONG_TYPE;
 
@@ -322,7 +324,6 @@ HEAP_ERR_E heap_decrease_key (HEAP_T* h, unsigned long i, unsigned long key)
       return HEAP_ERR_LARGER_KEY;
 
    HEAP_KEY(h, i) = key;
-
    while (i > 0 && (HEAP_KEY(h, HEAP_PARENT(i)) > HEAP_KEY(h, i)))
    {
       tmp_key = h->nodes[i]->key;
@@ -334,6 +335,8 @@ HEAP_ERR_E heap_decrease_key (HEAP_T* h, unsigned long i, unsigned long key)
       h->nodes[HEAP_PARENT(i)]->key = tmp_key;
       h->nodes[HEAP_PARENT(i)]->data = tmp_data;
       h->nodes[HEAP_PARENT(i)]->i = tmp_i;
+      *h->nodes[i]->i = i;
+      *h->nodes[HEAP_PARENT(i)]->i = HEAP_PARENT(i);
       i = HEAP_PARENT(i);
    }
    
@@ -360,7 +363,8 @@ HEAP_ERR_E heap_increase_key (HEAP_T* h, unsigned long i, unsigned long key)
 {
    void* tmp_data;
    unsigned long tmp_key;
-
+   unsigned long* tmp_i;
+   
    if (DS_HEAP_MAX != h->type)
       return HEAP_ERR_WRONG_TYPE;
 
@@ -384,10 +388,15 @@ HEAP_ERR_E heap_increase_key (HEAP_T* h, unsigned long i, unsigned long key)
       */
       tmp_key = h->nodes[i]->key;
       tmp_data = h->nodes[i]->data;
+      tmp_i = h->nodes[i]->i;
       h->nodes[i]->key = h->nodes[HEAP_PARENT(i)]->key;
       h->nodes[i]->data = h->nodes[HEAP_PARENT(i)]->data;
+      h->nodes[i]->i = h->nodes[HEAP_PARENT(i)]->i;      
       h->nodes[HEAP_PARENT(i)]->key = tmp_key;
       h->nodes[HEAP_PARENT(i)]->data = tmp_data;
+      h->nodes[HEAP_PARENT(i)]->i = tmp_i;
+      *h->nodes[i]->i = i;      
+      *h->nodes[HEAP_PARENT(i)]->i = HEAP_PARENT(i);
       i = HEAP_PARENT(i);
    }
    
