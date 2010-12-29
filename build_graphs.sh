@@ -1,7 +1,13 @@
-#!/bin/sh 
-dot -Tpng graph-i.lst > graph-i.png
-dot -Tpng graph-ii.lst > graph-ii.png
-dot -Tpng graph-iii.lst > graph-iii.png
-dot -Tpng graph-iv.lst > graph-iv.png
-dot -Tpng graph-v.lst > graph-v.png
+#!/bin/bash
+lst_files=*.lst
+out_dir=graphs
 
+echo "Creating graphs from .lst files"
+
+[ ! -d $out_dir ] && echo "Creating directory $out_dir" && mkdir $out_dir
+
+for f in $lst_files
+do
+  echo Graphing "$f"
+  dot -Tpng $f > $out_dir/$f.png
+done
