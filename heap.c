@@ -44,13 +44,11 @@ char* filename
    unsigned long weight;
    if (NULL == filename)
    {
-      //return GPH_ERR_ERR;
       fp = stderr;
    }
    else
    {
       fp = fopen (filename, "w");
-      fprintf (stderr, "%p", fp);
       if (NULL == fp)
          return HEAP_ERR_ERR;
    }
@@ -119,6 +117,35 @@ void heap_dump (HEAP_T* h)
 }
 
 /**
+ * @brief iterate over heap elements
+ *
+ * This routine can be used to iterator over the heap elements.
+ *
+ * @param[in] h
+ * @param[in] data
+ * @param[in] key
+ * @param[in] ctx Iterator context. Caller should set the context value to 0
+ * before starting the iterator
+ */
+HEAP_ERR_E heap_iter (HEAP_T* h, void** data, unsigned long* key, unsigned long* ctx)
+{
+   unsigned long i;
+   
+   if (NULL == ctx || NULL == key || NULL == data)
+      return HEAP_ERR_INVALID_ARGS;
+
+   i = *ctx;
+   if (i >= HEAP_SIZE(h))
+      return HEAP_ERR_ITERATOR_DONE;
+   
+   *data = h->nodes[i]->data;
+   *key =  h->nodes[i]->key;
+   *ctx += 1;
+   
+   return HEAP_ERR_OK;
+}
+
+/**
  * @brief CSLR MIN-HEAPIFY
  *
  * This routine creates a min-heap for the subtree rooted at index i. The
@@ -133,9 +160,6 @@ HEAP_ERR_E heap_min_heapify (HEAP_T* h, unsigned long i)
    unsigned long l = HEAP_LEFT(i);
    unsigned long r = HEAP_RIGHT(i);
    unsigned long smallest;
-   unsigned long tmp_key;
-   unsigned long* tmp_i;
-   void* tmp_data;
 
    if (h->type == DS_HEAP_MAX)
       return HEAP_ERR_WRONG_TYPE;
@@ -150,17 +174,7 @@ HEAP_ERR_E heap_min_heapify (HEAP_T* h, unsigned long i)
 
    if (smallest != i)
    {
-      tmp_key = HEAP_KEY(h, smallest);
-      tmp_data = HEAP_DATA(h, smallest);
-      tmp_i = HEAP_I(h, smallest);
-      HEAP_KEY(h, smallest) = HEAP_KEY(h, i);
-      HEAP_DATA(h, smallest) = HEAP_DATA(h, i);
-      HEAP_I(h, smallest) = HEAP_I(h, i);
-      HEAP_KEY(h, i) = tmp_key;
-      HEAP_DATA(h, i) = tmp_data;
-      HEAP_I(h, i) = tmp_i;
-      HEAP_I_VAL(h, i) = i;
-      HEAP_I_VAL(h, smallest) = smallest;
+      HEAP_SWAP_NODES(i,smallest);
       heap_min_heapify (h, smallest);
    }
    return HEAP_ERR_OK;
@@ -181,9 +195,6 @@ HEAP_ERR_E heap_max_heapify (HEAP_T* h, unsigned long i)
    unsigned long l = HEAP_LEFT(i);
    unsigned long r = HEAP_RIGHT(i);
    unsigned long largest;
-   unsigned long tmp_key;
-   unsigned long* tmp_i;
-   void* tmp_data;
 
    //fprintf (stdout, "i=%lu; l=%lu; r=%lu\n", i, l, r);
    if (h->type == DS_HEAP_MIN)
@@ -199,19 +210,10 @@ HEAP_ERR_E heap_max_heapify (HEAP_T* h, unsigned long i)
 
    if (largest != i)
    {
-      tmp_key = h->nodes[largest]->key;
-      tmp_data = h->nodes[largest]->data;
-      tmp_i = h->nodes[largest]->i;
-      h->nodes[largest]->key = h->nodes[i]->key;
-      h->nodes[largest]->data = h->nodes[i]->data;
-      h->nodes[largest]->i = h->nodes[i]->i;
-      h->nodes[i]->key = tmp_key;
-      h->nodes[i]->data = tmp_data;
-      h->nodes[i]->i = tmp_i;
-      *h->nodes[i]->i = i;
-      *h->nodes[largest]->i = largest;
+      HEAP_SWAP_NODES(i,largest);
       heap_max_heapify (h, largest);
    }
+   /* todo: set was_heapified to true */
    return HEAP_ERR_OK;
 }
 
@@ -226,6 +228,7 @@ HEAP_ERR_E heap_max_heapify (HEAP_T* h, unsigned long i)
  */
 HEAP_ERR_E heap_extract_max (HEAP_T* h, void** data, unsigned long* key)
 {
+   /* todo: check was_heapified  */
    if (h->type != DS_HEAP_MAX)
       return HEAP_ERR_WRONG_TYPE;
 
@@ -239,7 +242,8 @@ HEAP_ERR_E heap_extract_max (HEAP_T* h, void** data, unsigned long* key)
    h->nodes[0]->data = h->nodes[h->heap_size-1]->data;
    h->nodes[0]->key = h->nodes[h->heap_size-1]->key;
    h->nodes[0]->i = h->nodes[h->heap_size-1]->i;
-   *h->nodes[0]->i = 0;
+   if (h->nodes[0]->i)
+      *h->nodes[0]->i = 0;
    h->heap_size--;
    heap_max_heapify (h, 0);
    
@@ -256,6 +260,7 @@ HEAP_ERR_E heap_extract_max (HEAP_T* h, void** data, unsigned long* key)
  */
 HEAP_ERR_E heap_extract_min (HEAP_T* h, void** data, unsigned long* key)
 {
+   /* todo: check was_heapified  */
    if (h->type != DS_HEAP_MIN)
       return HEAP_ERR_WRONG_TYPE;
 
@@ -269,7 +274,8 @@ HEAP_ERR_E heap_extract_min (HEAP_T* h, void** data, unsigned long* key)
    h->nodes[0]->data = h->nodes[h->heap_size-1]->data;
    h->nodes[0]->key = h->nodes[h->heap_size-1]->key;
    h->nodes[0]->i = h->nodes[h->heap_size-1]->i;
-   *h->nodes[0]->i = 0;
+   if (h->nodes[0]->i)
+      *h->nodes[0]->i = 0;
    h->heap_size--;
    heap_min_heapify (h, 0);
 
@@ -310,10 +316,6 @@ HEAP_ERR_E heap_maximum (HEAP_T* h, void** data, unsigned long* key)
  */
 HEAP_ERR_E heap_decrease_key (HEAP_T* h, unsigned long i, unsigned long key)
 {
-   void* tmp_data;
-   unsigned long tmp_key;
-   unsigned long* tmp_i;
-   
    if (DS_HEAP_MIN != h->type)
       return HEAP_ERR_WRONG_TYPE;
 
@@ -327,17 +329,7 @@ HEAP_ERR_E heap_decrease_key (HEAP_T* h, unsigned long i, unsigned long key)
 
    while (i > 0 && (HEAP_KEY(h, HEAP_PARENT(i)) > HEAP_KEY(h, i)))
    {
-      tmp_key = h->nodes[i]->key;
-      tmp_data = h->nodes[i]->data;
-      tmp_i = h->nodes[i]->i;
-      h->nodes[i]->key = h->nodes[HEAP_PARENT(i)]->key;
-      h->nodes[i]->data = h->nodes[HEAP_PARENT(i)]->data;
-      h->nodes[i]->i = h->nodes[HEAP_PARENT(i)]->i;
-      h->nodes[HEAP_PARENT(i)]->key = tmp_key;
-      h->nodes[HEAP_PARENT(i)]->data = tmp_data;
-      h->nodes[HEAP_PARENT(i)]->i = tmp_i;
-      *h->nodes[i]->i = i;
-      *h->nodes[HEAP_PARENT(i)]->i = HEAP_PARENT(i);
+      HEAP_SWAP_NODES(i,HEAP_PARENT(i));
       i = HEAP_PARENT(i);
    }
    
@@ -362,10 +354,6 @@ HEAP_ERR_E heap_decrease_key (HEAP_T* h, unsigned long i, unsigned long key)
  */
 HEAP_ERR_E heap_increase_key (HEAP_T* h, unsigned long i, unsigned long key)
 {
-   void* tmp_data;
-   unsigned long tmp_key;
-   unsigned long* tmp_i;
-   
    if (DS_HEAP_MAX != h->type)
       return HEAP_ERR_WRONG_TYPE;
 
@@ -379,25 +367,7 @@ HEAP_ERR_E heap_increase_key (HEAP_T* h, unsigned long i, unsigned long key)
 
    while (i > 0 && (HEAP_KEY(h, HEAP_PARENT(i)) < HEAP_KEY(h, i)))
    {
-      /*
-        XXX: to-do: just swap the pointer instead
-        void* tmp;
-
-        tmp = h->nodes[i];
-        h->nodes[i] = h->nodes[HEAP_PARENT(i)];
-        h->nodes[HEAP_PARENT(i)] = tmp;
-      */
-      tmp_key = h->nodes[i]->key;
-      tmp_data = h->nodes[i]->data;
-      tmp_i = h->nodes[i]->i;
-      h->nodes[i]->key = h->nodes[HEAP_PARENT(i)]->key;
-      h->nodes[i]->data = h->nodes[HEAP_PARENT(i)]->data;
-      h->nodes[i]->i = h->nodes[HEAP_PARENT(i)]->i;      
-      h->nodes[HEAP_PARENT(i)]->key = tmp_key;
-      h->nodes[HEAP_PARENT(i)]->data = tmp_data;
-      h->nodes[HEAP_PARENT(i)]->i = tmp_i;
-      *h->nodes[i]->i = i;      
-      *h->nodes[HEAP_PARENT(i)]->i = HEAP_PARENT(i);
+      HEAP_SWAP_NODES(i,HEAP_PARENT(i));
       i = HEAP_PARENT(i);
    }
    
@@ -429,7 +399,7 @@ static HEAP_ERR_E heap_add (HEAP_T* h, unsigned long key, void* data, unsigned l
    node->i = i;
    h->nodes[h->heap_size] = node;
    h->heap_size++;
-
+   /* todo: set was_heapified to false */
    return HEAP_ERR_OK;
 }
 
@@ -481,7 +451,8 @@ HEAP_ERR_E heap_build (HEAP_T* h)
 {
    unsigned long i;
    HEAP_ERR_E err;
-   
+
+   /* todo: use was_heapified to skip this if already a heap */
    for (i = h->heap_size/2; i >= 1; i--)
    {
       if (h->type == DS_HEAP_MAX)
