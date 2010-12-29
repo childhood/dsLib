@@ -254,6 +254,70 @@ unsigned long w
 }
 
 /**
+ * @brief bellman =-ford shortest path algorithm 
+ *
+ * @param[in] g The graph to operate on
+ * @param[in] s The starting vertex
+ * @param[in] cb The function to call when a shortest spath vertex is determined.  
+ */
+void sp_bell_ford (GRAPH_T* g, unsigned long s, SP_DJ_FP_T cb)
+{
+   HEAP_T* h;
+   VTX_D_T* u = NULL;
+   VTX_D_T* v;
+   unsigned long key, no;
+   char* ctx = NULL;
+   EDGE_T* e;
+   void* p;
+   
+   initialize_single_source (g, s);
+   h = heap_create (DS_HEAP_MIN, GRAPH_NO_VERTICES(g));
+
+   while (NULL != (u = graph_vertex_next_get (g, u)))
+   {
+      heap_min_insert (h, D_SP_AUX_SPEST(u), u, &D_SP_AUX_I(u));
+   }
+
+   while (HEAP_SIZE(h))
+   {
+      heap_extract_min (h, &p, &key);
+      u = (VTX_D_T*)p;
+
+      ctx = NULL;
+      no = ((VTX_D_T*)u)->no;
+
+      while (no)
+      {
+         e = graph_vertex_next_edge_get (g, u, &ctx);
+         if (e->v1 == u)
+            v = e->v2;
+         else
+            v = e->v1;
+         if (v->id.iid == s)
+         {
+            no--;
+            continue;
+         }
+         DEBUG_PRINT ("Relaxing v=%lu (OLD weight: %lu; NEW weight: u=%lu w=%lu)\n",
+                 v->id.iid, D_SP_AUX_SPEST(v), u->id.iid, e->weight);
+         relax (g, u, v, e->weight);
+         heap_decrease_key (h, D_SP_AUX_I(v), D_SP_AUX_SPEST(v));
+         no--;
+      }
+   }
+
+   if (cb)
+   {
+      v = NULL;
+      while (NULL != (v = graph_vertex_next_get (g, v)))
+      {
+         cb (v);
+         //fprintf (stderr, "vid = %lu sp=%lu\n", v->id.iid, D_SP_AUX_SPEST(v));
+      }
+   }
+}
+
+/**
  * @brief Dijkstra's shortest path algorithm 
  *
  * @param[in] g The graph to operate on
