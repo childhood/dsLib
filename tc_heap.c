@@ -1,3 +1,23 @@
+/**
+ * heap test cases
+ * Copyright (c) 2010, Gaurav Mathur <narainmg@gmail.com>
+ *   
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *   
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * See README and COPYING for more details.
+ */
+
 #include <stdio.h>
 #include <heap.h>
 
@@ -11,7 +31,7 @@ typedef struct
  * @brief test heap API
  *
  */
-tc_heap_max_main (void)
+void tc_heap_max_main (void)
 {
 //  int A[] = {27, 17, 3, 16, 13, 10, 1, 5, 7, 12, 4, 8, 9, 0};
 //   int A[] = {1,2,3};
@@ -42,7 +62,6 @@ tc_heap_max_main (void)
    HEAP_T* h;
    unsigned int length;
    unsigned int idx;
-   unsigned long i;
    
    h = heap_create (DS_HEAP_MAX, 14);
    length = sizeof (A)/sizeof (TC_HEAP_DATA_SET);
@@ -57,24 +76,26 @@ tc_heap_max_main (void)
    heap_graphviz_description (h, "heap-max-heap-i.lst");
    for (idx = 0; idx < length; idx++)
    {
-      fprintf (stderr, "FINAL -- A[idx].num = %lu A[idx].idx=%lu\n", A[idx].num, A[idx].idx);
+      fprintf (stderr, "BEFORE -- A[idx].num = %lu A[idx].idx=%lu\n", A[idx].num, A[idx].idx);
    }
    
-   heap_increase_key (h, 5, 16);
+   //heap_increase_key (h, A[9].idx, 216);
+   //A[9].num = 216;
+   
+   //heap_increase_key (h, A[9].idx, 5);
+ //A[9].num = 5;
+   heap_increase_key (h, A[0].idx, 20);
+	  A[0].num = 20;
+
    heap_dump (h);
    heap_graphviz_description (h, "heap-max-heap-ii.lst");
 
-   h = heap_create (DS_HEAP_MIN, 14);
-   length = sizeof (A)/sizeof (TC_HEAP_DATA_SET);
-   for (idx = 0; idx < length; idx++)
-   {
-      if (HEAP_ERR_ERR == heap_min_insert (h, A[idx].num, NULL, &A[idx].idx))
-         fprintf (stderr, "error adding heap element\n");
-   }
-   //heap_build (h);
-   heap_dump (h);
-   heap_graphviz_description (h, "heap-min-heap.lst");
+for (idx = 0; idx < length; idx++)
+{
+   fprintf (stderr, "AFTER -- A[idx].num = %lu A[idx].idx=%lu\n", A[idx].num, A[idx].idx);
+}
 
+return;
 
 }
 
@@ -83,7 +104,7 @@ tc_heap_max_main (void)
  * @brief test heap API
  *
  */
-tc_heap_min_main (void)
+void tc_heap_min_main (void)
 {
 //  int A[] = {27, 17, 3, 16, 13, 10, 1, 5, 7, 12, 4, 8, 9, 0};
 //   int A[] = {1,2,3};
@@ -108,13 +129,12 @@ tc_heap_min_main (void)
                             {9, 0},
                             {3, 0},
                             {2, 0},
-                            {8, 0},
-                            {1, 0}};
+                            {8, 0}/*,
+                            {1, 0}*/};
   // int A[] = {4, 1, 3, 2, 16, 9, 10, 14, 8 ,7};
    HEAP_T* h;
    unsigned int length;
    unsigned int idx;
-   unsigned long i;
    
    h = heap_create (DS_HEAP_MIN, 14);
    length = sizeof (A)/sizeof (TC_HEAP_DATA_SET);
@@ -129,28 +149,20 @@ tc_heap_min_main (void)
 
    for (idx = 0; idx < length; idx++)
    {
-      fprintf (stderr, "FINAL -- A[idx].num = %lu A[idx].idx=%lu\n", A[idx].num, A[idx].idx);
+      fprintf (stderr, "BEFORE -- A[idx].num = %lu A[idx].idx=%lu\n", A[idx].num, A[idx].idx);
    }
-   return;
-   heap_decrease_key (h, 5, 16);
+
+   heap_decrease_key (h, A[3].idx, 7); /* Changing the key value 16 to 1 */
+   A[3].num = 7;
    heap_dump (h);
    heap_graphviz_description (h, "heap-min-heap-ii.lst");
 
-   h = heap_create (DS_HEAP_MIN, 14);
-   length = sizeof (A)/sizeof (TC_HEAP_DATA_SET);
    for (idx = 0; idx < length; idx++)
    {
-      if (HEAP_ERR_ERR == heap_min_insert (h, A[idx].num, NULL, &A[idx].idx))
-         fprintf (stderr, "error adding heap element\n");
+      fprintf (stderr, "AFTER -- A[idx].num = %lu A[idx].idx=%lu\n", A[idx].num, A[idx].idx);
    }
-   //heap_build (h);
-   heap_dump (h);
-   heap_graphviz_description (h, "heap-min-heap.lst");
-
-   for (idx = 0; idx < length; idx++)
-   {
-      fprintf (stderr, "FINAL -- A[idx].num = %lu A[idx].idx=%lu\n", A[idx].num, A[idx].idx);
-   }
+   
+   return;
 
 }
 
@@ -159,11 +171,13 @@ tc_heap_min_main (void)
  * @brief test heap API
  *
  */
-tc_heap_min_ii_main (void)
+void tc_heap_min_ii_main (void)
 {
-//  int A[] = {27, 17, 3, 16, 13, 10, 1, 5, 7, 12, 4, 8, 9, 0};
-//   int A[] = {1,2,3};
-   /*
+/*  int A[] = {27, 17, 3, 16, 13, 10, 1, 5, 7, 12, 4, 8, 9, 0};
+ */
+/* int A[] = {1,2,3};
+ */
+/*
    TC_HEAP_DATA_SET A[] = {{12,0},
                            {11,0},
                            {10,0},
@@ -175,7 +189,7 @@ tc_heap_min_ii_main (void)
                            {1,0},
                            {4,0},
                            {14,0}};
-   */                           
+*/                           
    TC_HEAP_DATA_SET A[] = {{16, 0},
                             {4, 0},
                             {10, 0},
@@ -190,7 +204,6 @@ tc_heap_min_ii_main (void)
    HEAP_T* h;
    unsigned int length;
    unsigned int idx;
-   unsigned long i;
    void* p;
    unsigned long key;
    char filename[128];
@@ -220,5 +233,5 @@ tc_heap_min_ii_main (void)
       fprintf (stderr, "FINAL == %lu\n", key);
       idx++;
    }
-
+   return;
 }

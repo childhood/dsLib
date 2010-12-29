@@ -22,7 +22,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <ds_types.h>
 #include <heap.h>
+#include <graph.h>
 
 /**
  * @brief graphviz description plugin for heap ds.
@@ -83,6 +85,23 @@ char* filename
    return HEAP_ERR_OK;
 }
 
+/**
+ * @brief dump heap keys
+ *
+ * heap dump for graph nodes
+ */
+void heap_graph_dump (HEAP_T* h)
+{
+   unsigned long idx;
+
+   fprintf (stdout, "[Dumping heap (heap_size=%lu)]\n", h->heap_size);
+   for (idx = 0; idx < h->heap_size; idx++)
+   {
+      fprintf (stdout, "i=%lu: key=%lu, vid=%lu\n",
+               (h->nodes[idx]->i)?*h->nodes[idx]->i:0, h->nodes[idx]->key,
+               ((VTX_D_T*)h->nodes[idx]->data)->id.iid);
+   }
+}
 
 /**
  * @brief dump heap keys
@@ -219,6 +238,8 @@ HEAP_ERR_E heap_extract_max (HEAP_T* h, void** data, unsigned long* key)
    *key =  h->nodes[0]->key;
    h->nodes[0]->data = h->nodes[h->heap_size-1]->data;
    h->nodes[0]->key = h->nodes[h->heap_size-1]->key;
+   h->nodes[0]->i = h->nodes[h->heap_size-1]->i;
+   *h->nodes[0]->i = 0;
    h->heap_size--;
    heap_max_heapify (h, 0);
    
@@ -247,35 +268,14 @@ HEAP_ERR_E heap_extract_min (HEAP_T* h, void** data, unsigned long* key)
    *key =  h->nodes[0]->key;
    h->nodes[0]->data = h->nodes[h->heap_size-1]->data;
    h->nodes[0]->key = h->nodes[h->heap_size-1]->key;
+   h->nodes[0]->i = h->nodes[h->heap_size-1]->i;
+   *h->nodes[0]->i = 0;
    h->heap_size--;
    heap_min_heapify (h, 0);
 
    return HEAP_ERR_OK;
 }
 
-
-/**
- * @brief extract the maximum element from the heap
- *
- * @param[in] g The heap to operate on
- * @param[out] data The application object attached with the key
- * @param[out] key The application object key
- * @return HEAP_ERR_E
- */
-HEAP_ERR_E heap_minimum (HEAP_T* h, void** data, unsigned long* key)
-{
-   if (h->type != DS_HEAP_MIN)
-      return HEAP_ERR_WRONG_TYPE;
-
-   if (h->heap_size < 1)
-   {
-      *data = NULL;
-      return HEAP_ERR_UNDERFLOW;
-   }
-   *data = h->nodes[0]->data;
-   *key =  h->nodes[0]->key;
-   return HEAP_ERR_OK;
-}
 
 /**
  * @brief extract the maximum element from the heap
@@ -324,6 +324,7 @@ HEAP_ERR_E heap_decrease_key (HEAP_T* h, unsigned long i, unsigned long key)
       return HEAP_ERR_LARGER_KEY;
 
    HEAP_KEY(h, i) = key;
+
    while (i > 0 && (HEAP_KEY(h, HEAP_PARENT(i)) > HEAP_KEY(h, i)))
    {
       tmp_key = h->nodes[i]->key;
@@ -375,7 +376,7 @@ HEAP_ERR_E heap_increase_key (HEAP_T* h, unsigned long i, unsigned long key)
       return HEAP_ERR_SMALLER_KEY;
    
    HEAP_KEY(h, i) = key;
-   printf ("inserting key = %lu\n", HEAP_KEY(h,i));         
+
    while (i > 0 && (HEAP_KEY(h, HEAP_PARENT(i)) < HEAP_KEY(h, i)))
    {
       /*

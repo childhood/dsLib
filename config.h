@@ -20,3 +20,10 @@
 #define TEST_CASE_SLL
 #define TEST_CASE_HEAP
 #define TEST_CASE_BTREE
+#undef DEBUG_PRINT
+
+#ifdef DEBUG
+#define DEBUG_PRINT(fmt, args...) fprintf(stderr, fmt, ## args)
+#else
+#define DEBUG_PRINT(fmt, args...)
+#endif

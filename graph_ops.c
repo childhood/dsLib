@@ -24,6 +24,7 @@
 #include <time.h>
 #include <string.h>
 
+#include <config.h>
 #include <ds_types.h>
 #include <queue.h>
 #include <graph.h>
@@ -31,14 +32,12 @@
 #include <heap.h>
 
 /**
+ * @brief graphviz plugin
  *
+ * @param[in] g The graph to operate on
+ * @param[in] filename file to write the graphviz format graph description to
  */
-
-GPH_ERR_E graphviz_description
-(
-GRAPH_T* g,
-char* filename
-)
+GPH_ERR_E graphviz_description (GRAPH_T* g, char* filename)
 {
    EDGE_T* e = NULL;
    FILE* fp;
@@ -51,7 +50,6 @@ char* filename
    else
    {
       fp = fopen (filename, "w");
-      fprintf (stderr, "%p", fp);
       if (NULL == fp)
          return GPH_ERR_ERR;
    }
@@ -71,12 +69,12 @@ char* filename
    {
       if (g->type == GRAPH_UNDIRECTED_T)
       {
-      fprintf (fp, "\t%lu -- %lu [weight=%lu, label = \"\"];\n", ((VTX_UD_T*)e->v1)->id.iid,
-               ((VTX_UD_T*)e->v2)->id.iid);
+      fprintf (fp, "\t%lu -- %lu [label = \"%ld\"];\n", ((VTX_UD_T*)e->v1)->id.iid,
+               ((VTX_UD_T*)e->v2)->id.iid, e->weight);
       }
       else
       {
-      fprintf (fp, "\t%lu -> %lu [label = \"%lu\"];\n", ((VTX_D_T*)e->v1)->id.iid,
+      fprintf (fp, "\t%lu -> %lu [label = \"%ld\"];\n", ((VTX_D_T*)e->v1)->id.iid,
                ((VTX_D_T*)e->v2)->id.iid, e->weight);
       }
    }
@@ -183,23 +181,19 @@ unsigned long source_vid
 
 /**
  * @brief relax routine for directed graphs
+ *
+ * @param[in] g The graph to operate on
+ * @param[in] u from vertex
+ * @param[in] v to vertex - improving the shortest path to v through u
+ * @param[in] w weight of edge (u, v)
  */
-static void relax_directed
-(
-GRAPH_T* g,
-VTX_D_T* u,
-VTX_D_T* v,
-unsigned long w
-
-)
+static void relax_directed (GRAPH_T* g, VTX_D_T* u, VTX_D_T* v, unsigned long w)
 {
-   //EDGE_T* e;
    unsigned long weight = w;
 
-   //e = graph_edge_find (g, u, v);
-   //weight = e->weight;
    if (D_SP_AUX_SPEST(v) > (D_SP_AUX_SPEST(u) + weight))
    {
+      DEBUG_PRINT ("adjusting vid=%lu to %lu+%lu\n", v->id.iid, D_SP_AUX_SPEST(u), weight);
       D_SP_AUX_SPEST(v) = D_SP_AUX_SPEST(u) + weight;
       D_SP_AUX_PRED(v) = u;
    }
@@ -207,20 +201,15 @@ unsigned long w
 
 /**
  * @brief relax routine for undirected graphs
+ *
+ * @param[in] g The graph to operate on
+ * @param[in] u from vertex
+ * @param[in] v to vertex - improving the shortest path to v through u
+ * @param[in] w weight of edge (u, v)
  */
-static void relax_undirected
-(
-GRAPH_T* g,
-VTX_UD_T* u,
-VTX_UD_T* v,
-unsigned long w
-)
+static void relax_undirected (GRAPH_T* g, VTX_UD_T* u, VTX_UD_T* v, unsigned long w)
 {
-   //EDGE_T* e;
    unsigned long weight = w;
-   
-   //e = graph_edge_find (g, u, v);
-   //weight = e->weight;
    
    if (UD_SP_AUX_SPEST(v) > (UD_SP_AUX_SPEST(u) + weight))
    {
@@ -264,19 +253,6 @@ unsigned long w
    return GPH_ERR_OK;
 }
 
-void heap_dump_ii (HEAP_T* h)
-{
-   unsigned long idx;
-
-   fprintf (stdout, "[Dumping heap (heap_size=%lu)]\n", h->heap_size);
-   for (idx = 0; idx < h->heap_size; idx++)
-   {
-      fprintf (stdout, "i=%lu: key=%lu, vid=%lu\n",
-               (h->nodes[idx]->i)?*h->nodes[idx]->i:0, h->nodes[idx]->key,
-               ((VTX_D_T*)h->nodes[idx]->data)->id.iid);
-   }
-}
-
 /**
  * @brief Dijkstra's shortest path algorithm 
  *
@@ -302,18 +278,14 @@ void sp_dijkstra (GRAPH_T* g, unsigned long s, SP_DJ_FP_T cb)
       heap_min_insert (h, D_SP_AUX_SPEST(u), u, &D_SP_AUX_I(u));
    }
 
-   heap_dump (h);
    while (HEAP_SIZE(h))
    {
-      printf ("DUMP 1\n");
-      heap_dump_ii (h);
-
       heap_extract_min (h, &p, &key);
       u = (VTX_D_T*)p;
-      cb (u);
 
       ctx = NULL;
       no = ((VTX_D_T*)u)->no;
+
       while (no)
       {
          e = graph_vertex_next_edge_get (g, u, &ctx);
@@ -322,23 +294,27 @@ void sp_dijkstra (GRAPH_T* g, unsigned long s, SP_DJ_FP_T cb)
          else
             v = e->v1;
          if (v->id.iid == s)
+         {
+            no--;
             continue;
-         printf ("Relaxing v=%lu (u=%lu w=%lu)", v->id.iid, u->id.iid, e->weight);
+         }
+         DEBUG_PRINT ("Relaxing v=%lu (OLD weight: %lu; NEW weight: u=%lu w=%lu)\n",
+                 v->id.iid, D_SP_AUX_SPEST(v), u->id.iid, e->weight);
          relax (g, u, v, e->weight);
          heap_decrease_key (h, D_SP_AUX_I(v), D_SP_AUX_SPEST(v));
-         printf ("DUMP 2\n");
-         heap_dump_ii (h);
          no--;
       }
    }
 
-   // debug
-   v = NULL;
-   while (NULL != (v = graph_vertex_next_get (g, v)))
+   if (cb)
    {
-      fprintf (stderr, "vid = %lu sp=%lu\n", v->id.iid, D_SP_AUX_SPEST(v));
+      v = NULL;
+      while (NULL != (v = graph_vertex_next_get (g, v)))
+      {
+         cb (v);
+         //fprintf (stderr, "vid = %lu sp=%lu\n", v->id.iid, D_SP_AUX_SPEST(v));
+      }
    }
-   
 }
 
 /**

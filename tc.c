@@ -18,6 +18,7 @@
  * See README and COPYING for more details.
  */
 
+#include <tc_graph.h>
 int main (int argc, char** argv)
 {
    //graph_main();
@@ -25,11 +26,16 @@ int main (int argc, char** argv)
    //is_sort_main ();
    //queue_main ();
    //matrix_main();
-   //bfs_main ();
+   bfs_main ();
    //tc_directed_main();
    //tc_heap_max_main();
    //tc_heap_min_main();
    //tc_heap_min_ii_main();
-   //tc_dj_main();
+   tc_dj_i_main();
    tc_dj_ii_main();
+   tc_dj_iii_main();
+   tc_dj_iv_main();
+   tc_dj_v_main();
+
+   return 0;
 }

@@ -58,10 +58,11 @@ typedef struct ds_dfs_AUX {
 #define UD_SP_AUX_SPEST(VTX)    ((DS_SP_AUX_T*)((VTX_UD_T*)(VTX))->aux)->spest
 #define UD_SP_AUX_PRED(VTX)     ((DS_SP_AUX_T*)((VTX_UD_T*)(VTX))->aux)->pred
 
+/* prototypes */
 GRAPH_T* matrix_create (const unsigned long row, const unsigned long column);
 
 GPH_ERR_E dfs (GRAPH_T* g, unsigned long vid, DFS_FUNCPTR_T func);
 GPH_ERR_E bfs (GRAPH_T* g, unsigned long vid, BFS_FUNCPTR_T func);
 GRAPH_T* matrix_create (const unsigned long N, const unsigned long M);
 GPH_ERR_E graphviz_description (GRAPH_T* g, char* filename);
-
+void sp_dijkstra (GRAPH_T* g, unsigned long s, SP_DJ_FP_T cb);
