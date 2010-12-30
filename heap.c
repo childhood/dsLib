@@ -54,25 +54,35 @@ char* filename
    }
    
    fprintf (fp, "graph G {\n");
-   fprintf (fp, "node [shape = circle, style=filled];\n");
+   fprintf (fp, "node [shape = circle, style=filled, color=\"sienna2\"];\n");
    fprintf (fp, "size=\"12,8\"\n");
 
    weight = h->heap_size;
    if (HEAP_LEFT(idx) < h->heap_size)
-      fprintf (fp, "\t%lu -- %lu [weight=%lu, label = \"%lu\"];\n ", HEAP_KEY(h, idx),
-               HEAP_KEY(h, HEAP_LEFT(idx)), weight, *HEAP_I(h, HEAP_LEFT(idx)));
+      fprintf (fp, "\t%lu -- %lu [headlabel=\"%lu\", weight=%lu];\n ",
+               HEAP_KEY(h, idx),
+               HEAP_KEY(h, HEAP_LEFT(idx)),
+               HEAP_LEFT(idx),
+               weight);
    if (HEAP_RIGHT(idx) < h->heap_size)
-      fprintf (fp, "\t%lu -- %lu [weight=%lu, label = \"%lu\"];\n", HEAP_KEY(h, idx),
-               HEAP_KEY(h, HEAP_RIGHT(idx)), weight, *HEAP_I(h, HEAP_RIGHT(idx)));
+      fprintf (fp, "\t%lu -- %lu [headlabel=\"%lu\", weight=%lu];\n",
+               HEAP_KEY(h, idx),
+               HEAP_KEY(h, HEAP_RIGHT(idx)),
+               HEAP_RIGHT(idx),
+               weight);
    
    for (idx = 1; idx < h->heap_size; idx++)
    {
       if (HEAP_LEFT(idx) < h->heap_size)
-         fprintf (fp, "\t%lu -- %lu [label = \"%lu\"]; \n ", HEAP_KEY(h, idx),
-                  HEAP_KEY(h, HEAP_LEFT(idx)), *HEAP_I(h, HEAP_LEFT(idx)));
+         fprintf (fp, "\t%lu -- %lu [headlabel = \"%lu\"]; \n ",
+                  HEAP_KEY(h, idx),
+                  HEAP_KEY(h, HEAP_LEFT(idx)),
+                  HEAP_LEFT(idx));
       if (HEAP_RIGHT(idx) < h->heap_size)
-         fprintf (fp, "\t%lu -- %lu [label = \"%lu\"];\n", HEAP_KEY(h, idx),
-                  HEAP_KEY(h, HEAP_RIGHT(idx)), *HEAP_I(h, HEAP_RIGHT(idx)));
+         fprintf (fp, "\t%lu -- %lu [headlabel = \"%lu\"];\n",
+                  HEAP_KEY(h, idx),
+                  HEAP_KEY(h, HEAP_RIGHT(idx)),
+                  HEAP_RIGHT(idx));
    }
    
    fprintf (fp, "}\n");
@@ -112,7 +122,7 @@ void heap_dump (HEAP_T* h)
    for (idx = 0; idx < h->heap_size; idx++)
    {
       fprintf (stdout, "i=%lu -> key=%lu\n",
-               (h->nodes[idx]->i)?*h->nodes[idx]->i:0, h->nodes[idx]->key);
+               idx, h->nodes[idx]->key);
    }
 }
 

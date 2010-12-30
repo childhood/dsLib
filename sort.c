@@ -23,9 +23,9 @@
 #include <heap.h>
 
 /**
- * @brief heap sort
+ * @brief heapsort
  *
- * This routine implements the insertion sort algorithm
+ * This routine implements the heapsort sorting algorithm
  *
  * HEAPSORT(A)
  * 1 BUILD-MAX-HEAP(A)
@@ -37,20 +37,19 @@
 int heapsort (HEAP_T* h)
 {
    int i;
-   unsigned long shs = HEAP_SIZE(h);
+   unsigned long shs = HEAP_SIZE(h); /* save heap size */
    
    if (IS_NOT_MAX_HEAP(h))
       return -1;
 
-   heap_build (h);
-   heap_graphviz_description (h, "heap.lst");
-   for (i = HEAP_LEN(h)-1; i >= 2; i--)
+   heap_build (h); /* todo: skip building heap if already heapified */
+   for (i = HEAP_LEN(h)-1; i >= 1; i--)
    {
-      HEAP_SWAP_NODES(1,i);
+      HEAP_SWAP_NODES(0,i);
       HEAP_SIZE(h) = HEAP_SIZE(h) - 1;
-      heap_max_heapify (h, i);
+      heap_max_heapify (h, 0);
    }
-   HEAP_SIZE(h) = shs;
+   HEAP_SIZE(h) = shs; /* restore heap size */
    return 0;
 }
 
@@ -82,77 +81,6 @@ int isort_i (int* arr, size_t num)
          }
       *(arr+i+1) = key;
    }
-   return 0;
-}
-
-/**
- * @brief insertion sort driver
- *
- * This routine implements a test driver for insertion sort
- *
- */
-int isort_main (int argc, char** argv)
-{
-#define TEST_ISORT_BOUND   (1024*20)
-   int arr[TEST_ISORT_BOUND];
-   int idx;
-   int val = 1;
-
-   for (idx = TEST_ISORT_BOUND; idx >= 0; idx--)
-   {
-      arr[idx] = val;
-      val++;
-   }
-   
-   isort_i (arr, TEST_ISORT_BOUND);
-
-   for (idx = 0; idx < TEST_ISORT_BOUND; idx++)
-   {
-      fprintf (stdout, "%d\n", arr[idx]);
-   }
-   return 0;
-}
-
-/**
- * @brief insertion sort driver
- *
- * This routine implements a test driver for insertion sort
- *
- */
-int heapsort_main (int argc, char** argv)
-{
-#define TEST_HSORT_BOUND   (10)
-   int arr[TEST_HSORT_BOUND];
-   int idx;
-   HEAP_T* h;
-   void* p;
-   unsigned long key;
-   unsigned long ctx = 0;
-   
-   //h = heap_create (DS_HEAP_MAX, TEST_HSORT_BOUND);
-   h = heap_create (DS_HEAP_MAX, TEST_HSORT_BOUND);
-   //for (idx = TEST_HSORT_BOUND; idx >= 0; idx--)
-   //{
-   //heap_max_insert (h, idx, NULL, NULL);
-   //}
-   heap_max_insert (h, 10, NULL, NULL);
-   heap_max_insert (h, 30, NULL, NULL);
-   heap_max_insert (h, 3, NULL, NULL);
-   heap_max_insert (h, 26, NULL, NULL);
-   heap_max_insert (h, 180, NULL, NULL);
-   heap_max_insert (h, 16, NULL, NULL);
-   heap_max_insert (h, 5, NULL, NULL);
-   heap_max_insert (h, 12, NULL, NULL);
-   heap_max_insert (h, 67, NULL, NULL);
-   heap_max_insert (h, 13, NULL, NULL);
-
-   heapsort (h);
-
-   while (HEAP_ERR_ITERATOR_DONE != heap_iter (h, &p, &key, &ctx))
-   {
-      fprintf (stdout, "key = %lu\n", key);
-   }
-   
    return 0;
 }
 

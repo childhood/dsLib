@@ -31,7 +31,8 @@ int main (int argc, char** argv)
    /* bfs_main (); */
    //tc_directed_main();
    /*
-   tc_heap_iterator(); 
+   tc_heap_iterator();
+   
    tc_heap_max_main();
    tc_heap_min_main();
    tc_heap_min_ii_main();
