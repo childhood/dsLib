@@ -13,8 +13,8 @@ ARCH	:= $(shell uname -m)
 OUTDIR	:= $(ARCH)
 TC_OUT  = tc
 
-DS_OBJS = sll.o ds.o graph.o heap.o queue.o graph_ops.o
-TC_OBJS = tc.o tc_graph.o tc_heap.o
+DS_OBJS = ll.o ds.o graph.o heap.o queue.o graph_ops.o sort.o utils.o
+TC_OBJS = tc.o tc_graph.o tc_heap.o tc_sort.o
 ALGO_OBJS = sort.o
 
 all: $(TARGET) $(TC_OUT)

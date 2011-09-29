@@ -19,9 +19,13 @@
 
 #include <ds_types.h>
 
+#define DEFAULT_MAX_LEVEL       (16)
+#define DEFAULT_P               (0.5)
+
+/* single linked list node */
 typedef struct _sllnode
-    {
-    struct _sllnode* next;
+   {
+      struct _sllnode* next;
 #define FIDATA   item.idata
 #define FUIDATA  item.uidata
 #define FCDATA   item.cdata    
@@ -34,6 +38,7 @@ typedef struct _sllnode
 
 typedef int (*SLL_ITER_FUNC)(SLL_NODE*);
 
+/* Single linked list meta node */
 typedef struct _sllnodehead {
    struct _sllnode* lhead;
    struct _sllnode* ltail;
@@ -42,8 +47,33 @@ typedef struct _sllnodehead {
    SLL_ITER_FUNC iterator;
    FUNCPTR2_T preiterator;
    FUNCPTR2_T postiterator;
+   unsigned char max_level;
 } SLL_T;
-    
+
+/* Skip list node type */
+typedef struct _sklnode {
+   /* array of level N next nodes */
+   struct _sklnode** nexts;
+#define FIDATA   item.idata
+#define FUIDATA  item.uidata
+#define FCDATA   item.cdata    
+#define FUCDATA  item.ucdata    
+#define FVPDATA  item.vpdata
+#define FFPDATA  item.fpdata 
+   NODE_DATA_TYPE_E type;
+   NODE_DATA_T item;       
+}SKL_NODE;
+
+/* Skip list meta node */
+typedef struct _skpnodehead {
+   struct _sklnode** heads;
+   int total_elements;
+   NODE_DATA_TYPE_E data_type;
+   SLL_ITER_FUNC iterator;
+   FUNCPTR2_T preiterator;
+   FUNCPTR2_T postiterator;
+   unsigned char max_level;
+} SKL_T; 
 
 typedef struct _dllnode
     {

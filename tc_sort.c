@@ -18,8 +18,11 @@
  * See README and COPYING for more details.
  */
 
+#include <stdio.h>
+#include <sort.h>
+
 /**
- * @brief insertion sort driver
+* @brief insertion sort driver
  *
  * This routine implements a test driver for insertion sort
  *

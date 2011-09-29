@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include <stdarg.h> /* va_* */
 
-#include <sll.h>
+#include <ll.h>
 
 /*******************************************************************************
 * sll_first_get - return the first node in the list
@@ -307,6 +307,7 @@ SLL_ERR_E sll_insert (SLL_T* head, ...)
     {
     SLL_NODE* newNode;
     va_list ap;
+
     newNode = (SLL_NODE*)malloc (sizeof (SLL_NODE));
     if (NULL == newNode)
         return SLL_ERR_MALLOC_FAIL;    
@@ -466,17 +467,16 @@ SLL_NODE* sll_find_prev (SLL_T* sll, ...)
     va_end (ap);
     return NULL;
     }
-                    
-/*******************************************************************************
- * sll_delete - remove an element from the SLL
- *
- * This routine removes an element from the SLL and returns the element node
- *
- * ARGUMENTS: head - head of the SLL
- *              item - element to be removed
- * RETURNS: 
- */
 
+
+/**
+ * @brief remove an element from the single linked list and return the element
+ * node 
+ * 
+ * @param[in] head head of the sll
+ * @param[in] item item to be deleted
+ * @return SLL_ERR_E
+ */
 SLL_ERR_E sll_delete (SLL_T* sll, ...)
     {
     SLL_NODE* node;
@@ -578,12 +578,11 @@ SLL_NODE* sll_remove_first (SLL_T* sll)
     return node;
     }
 
-/*******************************************************************************
- * sll_iter - 
+/**
+ * @brief single linked list iterator
  *
  * RETURNS: SLL_T* if ok; NULL if error
  */
-
 void sll_iter (SLL_T* head)
     {
     SLL_NODE* node = head->lhead;
@@ -636,7 +635,6 @@ SLL_NODE* sll_find_nth_from_last (SLL_NODE* head, int nth)
  * be called after the iterator callback is done.
  * @return A new linked list (SLL_T*)
  */
-
 SLL_T* sll_new (NODE_DATA_TYPE_E data_type, SLL_ITER_FUNC iterator,
                 FUNCPTR2_T pre, FUNCPTR2_T post)
     {
@@ -656,4 +654,73 @@ SLL_T* sll_new (NODE_DATA_TYPE_E data_type, SLL_ITER_FUNC iterator,
     if (pre)
     sll->preiterator = pre;
     return sll;
+    }
+
+/**
+ * @brief return a random level for a new skip list node
+ * 
+ * @return SLL_ERR_E
+ */
+static unsigned int skl_random_level (void)
+{
+   unsigned int level = 0;
+   
+   while (dslib_rand(2) < DEFAULT_P && level < DEFAULT_MAX_LEVEL)
+      level = level + 1;
+   return level;
+}
+
+/**
+ * @brief insert an element into the skip list
+ * 
+ * @param[in] head list to insert item into 
+ * @param[in] item the item to insert
+ * @return SLL_ERR_E
+ */
+SLL_ERR_E skl_insert (SKL_T* head, ...)
+{
+   SKL_NODE* newNode;
+   SKL_NODE* update[DEFAULT_MAX_LEVEL] = {0};
+   va_list ap;
+
+   
+   
+   newNode = (SKL_NODE*)malloc (sizeof (SKL_NODE));
+   if (NULL == newNode)
+      return SLL_ERR_MALLOC_FAIL;
+
+   newNode->nexts = malloc (head->max_level*sizeof (SKL_NODE*));
+   
+    va_start (ap, head);
+    switch (head->data_type)
+    {
+       case IDATA:
+       case CDATA:          
+          newNode->FIDATA = va_arg (ap, int);
+          break;
+       case UIDATA:
+       case UCDATA:
+          newNode->FUIDATA = va_arg (ap, unsigned int);
+          break;
+       case VPDATA:
+          newNode->FVPDATA = va_arg (ap, void*);
+          break;
+       case FPDATA:
+          newNode->FFPDATA = va_arg (ap, FUNCPTR2_T);
+          break;                
+    case LDATA:
+    case LLDATA:
+    case ULDATA:
+    case ULLDATA:
+        /* todo */
+        break;
+    }
+
+    if (head->lhead == NULL)
+        head->lhead = newNode;
+    if (head->ltail != NULL)
+        head->ltail->next = newNode;
+    head->ltail = newNode;
+    va_end (ap);
+    return SLL_ERR_OK;
     }
