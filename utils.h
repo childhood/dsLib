@@ -1,3 +1,4 @@
 
-void dslib_srand(void);
-unsigned long dslib_rand(unsigned int max);
+void dslib_srandom(void);
+
+unsigned long dslib_random(unsigned int max);

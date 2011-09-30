@@ -19,8 +19,9 @@
 
 #include <ds_types.h>
 
-#define DEFAULT_MAX_LEVEL       (16)
-#define DEFAULT_P               (0.5)
+#define DEFAULT_SKL_MAX_LEVEL   (16)
+#define DEFAULT_SKL_P           (0.5)
+#define DEFAULT_SKL_START_LEVEL (1)
 
 /* single linked list node */
 typedef struct _sllnode
@@ -36,6 +37,7 @@ typedef struct _sllnode
     NODE_DATA_T item;       
     }SLL_NODE;
 
+typedef int (*SKL_ITER_FUNC)(SLL_NODE*);
 typedef int (*SLL_ITER_FUNC)(SLL_NODE*);
 
 /* Single linked list meta node */
@@ -60,19 +62,30 @@ typedef struct _sklnode {
 #define FUCDATA  item.ucdata    
 #define FVPDATA  item.vpdata
 #define FFPDATA  item.fpdata 
-   NODE_DATA_TYPE_E type;
-   NODE_DATA_T item;       
+   NODE_DATA_T item;
+   unsigned char level;
 }SKL_NODE;
 
 /* Skip list meta node */
-typedef struct _skpnodehead {
-   struct _sklnode** heads;
+typedef struct _skl {
+   /* This is a real node, not just a pointer to the first node of the
+    * list. It's item field is not filled or used though.
+    */
+   SKL_NODE* head;
+   /* Total number of elements in this list */
    int total_elements;
+   /* Type of data the list will contain */
    NODE_DATA_TYPE_E data_type;
+   /* This function will be called for every node that's looked up in a SKL interator */   
    SLL_ITER_FUNC iterator;
+   /* This function will be at the start of an SKL iterator */   
    FUNCPTR2_T preiterator;
+   /* This function will be at the end of an SKL iterator */   
    FUNCPTR2_T postiterator;
+   /* The maximum level supported in this skip list */
    unsigned char max_level;
+   /* Current maximum level used by a node in the list */
+   unsigned char cur_level;
 } SKL_T; 
 
 typedef struct _dllnode
@@ -83,20 +96,21 @@ typedef struct _dllnode
     }DLL_NODE;
 
 typedef enum {
-   SLL_ERR_ERROR_HIGH = -512, /* fencepost */
-   SLL_ERR_MALLOC_FAIL,
-   SLL_ERR_ERR = -1, /* generic operational error */
-   SLL_ERR_OK = 0 /* routine returned without any errors */
-} SLL_ERR_E;
+   LL_ERR_ERROR_HIGH = -512, /* fencepost */
+   LL_ERR_ELE_NOT_FOUND, /* element not found in the list */
+   LL_ERR_MALLOC_FAIL,
+   LL_ERR_ERR = -1, /* generic operational error */
+   LL_ERR_OK = 0 /* routine returned without any errors */
+} LL_ERR_E;
 
 
 /* Public API */
 /* insert an element into the SLL */
-SLL_ERR_E       sll_insert (SLL_T* head, ...);
+LL_ERR_E        sll_insert (SLL_T* head, ...);
 /* insert N element into the SLL, all of the same types */
-SLL_ERR_E       sll_ninsert (SLL_T* head, unsigned int num, ...);
+LL_ERR_E        sll_ninsert (SLL_T* head, unsigned int num, ...);
 /* delete an element from the SLL */
-SLL_ERR_E       sll_delete (SLL_T* sll, ...);
+LL_ERR_E        sll_delete (SLL_T* sll, ...);
 /* create a new SLL */
 SLL_T*          sll_new (NODE_DATA_TYPE_E data_type, SLL_ITER_FUNC iterator,
                          FUNCPTR2_T pre, FUNCPTR2_T post);

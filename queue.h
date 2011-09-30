@@ -10,7 +10,8 @@ Modification History
 #ifndef DS_QUEUE_H
 #define DS_QUEUE_H
 
-#include <sll.h>
+#include <ll.h>
+
 #define QUEUE_DEPTH(Q)          ((Q)->cur_size)
 #define QUEUE_SIZE(Q)           ((Q)->max_size)
 #define QUEUE_IS_EMPTY(Q)       ((Q)->cur_size)?DS_FALSE:DS_TRUE

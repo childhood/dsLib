@@ -1,5 +1,7 @@
 
-void dslib_srand(void)
+#include <stdio.h>
+
+void dslib_srandom (void)
 {
    int i;
    FILE* op;
@@ -25,7 +27,7 @@ void dslib_srand(void)
    srandom (seed);
 }
 
-unsigned long dslib_rand (unsigned int max)
+unsigned long dslib_random (unsigned int max)
 {
-   return (random()%max);
+   return (random()%(max+1));
 }
