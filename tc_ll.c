@@ -18,6 +18,10 @@
  * See README and COPYING for more details.
  */
 
+#include <stdio.h>
+
+#include <ll.h>
+
 /*******************************************************************************
  * sll_new - create a new SSL
  *
@@ -26,7 +30,8 @@
 
 int post_iterator (int ignore1, int ignore2, int ignore3)
 {
-   printf ("\n[END]\n");
+   fprintf (stdout, "\n");
+   fprintf (stdout, "TC [LL]: [END]\n");
    return 0;
 }
 
@@ -35,7 +40,6 @@ int post_iterator (int ignore1, int ignore2, int ignore3)
  *
  * RETURNS: SLL_T* if ok; NULL if error
  */
-
 int pre_iterator (int ignore1, int ignore2, int ignore3)
 {
    printf ("[==]\n");
@@ -47,10 +51,9 @@ int pre_iterator (int ignore1, int ignore2, int ignore3)
  *
  * RETURNS: SLL_T* if ok; NULL if error
  */
-
 static int iter_cb_int (SLL_NODE* node)
 {
-   printf ("%ld ", node->FIDATA);
+   fprintf (stdout, "%ld ", node->FIDATA);
    return 0;
 }
 
@@ -59,29 +62,29 @@ static int iter_cb_int (SLL_NODE* node)
 *
 * RETURNS: void
 */
-
 static void test_case_int_1 (void)
 {
     SLL_T* head;
     int i;
 
-    fprintf (stderr, "test case int#1\n");
+    fprintf (stdout, "TC[LL]: test case int#1\n");
     head = sll_new (IDATA, iter_cb_int, pre_iterator, post_iterator);
 
+    fprintf (stdout, "TC[LL]: inserting 10...19\n");
     for (i = 10; i < 20; i++)
        sll_insert (head, i);
     sll_iter (head);
     
-    fprintf (stderr, "deleting 10\n");
+    fprintf (stdout, "TC[LL]: deleting 10\n");
     sll_delete (head, 10);
-    fprintf (stderr, "deleting 15\n");
+    fprintf (stdout, "TC[LL]: deleting 15\n");
     sll_delete (head, 15);
-    fprintf (stderr, "deleting 19\n");
+    fprintf (stdout, "TC[LL]: deleting 19\n");
     sll_delete (head, 19);
     sll_iter (head);
-    fprintf (stderr, "inserting 19\n");    
+    fprintf (stdout, "TC[LL]: inserting 19\n");    
     sll_insert (head, 19);
-    fprintf (stderr, "inserting 10\n");    
+    fprintf (stdout, "TC[LL]: inserting 10\n");    
     sll_insert (head, 10);
     sll_iter (head);
 }
@@ -91,14 +94,13 @@ static void test_case_int_1 (void)
 *
 * RETURNS: void
 */
-
 static void test_case_int_2 (void)
 {
     SLL_T* first;
     SLL_T* second;
     int i;
 
-    fprintf (stderr, "test case int#2\n");
+    fprintf (stdout, "TC[LL]: test case int#2\n");
     first = sll_new (IDATA, iter_cb_int, pre_iterator, post_iterator);
     second = sll_new (IDATA, iter_cb_int, pre_iterator, post_iterator);
 
@@ -109,8 +111,8 @@ static void test_case_int_2 (void)
 
     sll_iter (first);
     sll_iter (second);
-    fprintf (stderr, "expanding...\n");
-    sll_expand (first, second);
+    fprintf (stdout, "TC[LL]: concatenating\n");
+    sll_concat (first, second);
     sll_iter (first);
 }
 
@@ -208,5 +210,93 @@ int tc_sll_main (int argc, char** argv)
    test_case_char ();
    test_case_int_2 ();
    test_case_int_3 ();
+   return 0;
+}
+
+
+/**
+ * @brief 
+ * 
+ * @return A new linked list (SLL_T*)
+ */
+static void tc_skl_2 (void)
+{
+    SKL_T* head;
+    unsigned long item;
+    int i;
+
+    fprintf (stdout, "TC[SKL]: test case int#2\n");
+    head = skl_new (IDATA, 16, iter_cb_int, pre_iterator, post_iterator);
+
+    for (i = 1; i <= 10; i++)
+    {
+       fprintf (stdout, "inserting %lu \n", i);
+       skl_insert_idata (head, i);
+    }
+    fprintf (stdout, "\n");
+    //skl_iter (head);
+    
+    fprintf (stderr, "deleting 10\n");
+    skl_delete_idata (head, 5);
+    /*
+    fprintf (stderr, "deleting 15\n");
+    sll_delete (head, 15);
+    fprintf (stderr, "deleting 19\n");
+    sll_delete (head, 19);
+    sll_iter (head);
+    fprintf (stderr, "inserting 19\n");    
+    sll_insert (head, 19);
+    fprintf (stderr, "inserting 10\n");    
+    sll_insert (head, 10);
+    sll_iter (head);
+    */
+    skl_iter (head);
+}
+
+/**
+ * @brief 
+ * 
+ * @return A new linked list (SLL_T*)
+ */
+static void tc_skl_1 (void)
+{
+    SKL_T* head;
+    unsigned long item;
+    int i;
+
+    fprintf (stdout, "TC[SKL]: test case int#1\n");
+    head = skl_new (IDATA, 16, iter_cb_int, pre_iterator, post_iterator);
+
+    for (i = 1; i <= 20; i++)
+    {
+       item = dslib_random (2000);
+       fprintf (stdout, "inserting %lu \n", item);
+       skl_insert_idata (head, item);
+    }
+    fprintf (stdout, "\n");
+    skl_iter (head);
+    
+    /*
+    fprintf (stderr, "deleting 10\n");
+    sll_delete (head, 10);
+    fprintf (stderr, "deleting 15\n");
+    sll_delete (head, 15);
+    fprintf (stderr, "deleting 19\n");
+    sll_delete (head, 19);
+    sll_iter (head);
+    fprintf (stderr, "inserting 19\n");    
+    sll_insert (head, 19);
+    fprintf (stderr, "inserting 10\n");    
+    sll_insert (head, 10);
+    sll_iter (head);
+    */
+}
+
+int tc_skl_main (int argc, char** argv)
+{
+   /* to-do seed PRNG */
+   //dslib_srandom ();
+   //tc_skl_1 ();
+   tc_skl_2 ();
    return 0;
 }

@@ -18,12 +18,14 @@
  * See README and COPYING for more details.
  */
 
+#define DEBUG
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h> /* va_* */
 
 #include <ll.h>
 #include <utils.h>
+#include <config.h>
 
 /*******************************************************************************
 * sll_first_get - return the first node in the list
@@ -153,19 +155,16 @@ SLL_NODE* sll_next_get
     return node->next;
     }
 
-/*******************************************************************************
-* sll_prev_get - return the node previous to the one whose object id is given
-*
-* This routine returns the node previou to the node <to>. The routine NULL to
-* signify "no node" if <to> is either NULL, or the first node in the list.
-*
-* ARGUMENTS:
-*  <sll> - linked list to operate on
-*  <to> - find the node previous to this node
-*            
-* RETURNS: Valid SLL_NODE* or NULL
-*/
-
+/**
+ * sll_prev_get - return the node previous to the one whose object id is given
+ *
+ * This routine returns the node previou to the node <to>. The routine NULL to
+ * signify "no node" if <to> is either NULL, or the first node in the list.
+ *
+ * @param[in] sll linked list to operate on
+ * @param[in] to find previous node to this node
+ * @return Valid SLL_NODE* or NULL
+ */
 SLL_NODE* sll_prev_get
     (
     SLL_T* sll,         /* linked list to operate on */
@@ -189,33 +188,17 @@ SLL_NODE* sll_prev_get
     return prev;
     }
 
-/*******************************************************************************
- * sll_concat - insert an element into the SLL 
- *
- * RETURNS:  error code
- */
-
-SLL_T* sll_concat (SLL_T* first, SLL_T* second)
-    {
-    /* to-do */
-    /*
-    SLL_NODE* node;
-    SLL_T* new = malloc (sizeof (SLL_T));
-    
-    */
-    return NULL;
-    }
-
-/*******************************************************************************
- * sll_union - 
+/**
+ * @brief concatenate two lists
  *
  * This list copies the contents of list <second> into the list specified by
- * <first>, exapnding the list <first>.
+ * <first>, exapanding the list <first>.
  *
- * RETURNS: LL_ERR_ERR if error, LL_ERR_OK if successful
+ * @param[in] first the first list
+ * @param[in] second the second list
+ * @return LL_ERR_E
  */
-
-LL_ERR_E sll_union (SLL_T* first, SLL_T* second)
+LL_ERR_E sll_concat (SLL_T* first, SLL_T* second)
     {
     SLL_NODE* node;
 
@@ -252,58 +235,13 @@ LL_ERR_E sll_union (SLL_T* first, SLL_T* second)
     return LL_ERR_OK;
     }
 
-/*******************************************************************************
- * sll_expand - expand a list
- *
- * This list copies the contents of list <second> into the list specified by
- * <first>, exapnding the list <first>.
- *
- * RETURNS: LL_ERR_ERR if error, LL_ERR_OK if successful
+/**
+ * @brief insert an element into the linked list
+ * 
+ * @param[in] sll linked-list
+ * @param[in] ... item to insert
+ * @return LL_ERR_E
  */
-
-LL_ERR_E sll_expand (SLL_T* first, SLL_T* second)
-    {
-    SLL_NODE* node;
-
-    node = second->lhead;
-    if (first->data_type != second->data_type)
-        return LL_ERR_ERR;
-    while (node)
-        {
-        switch (first->data_type)
-            {
-            case IDATA:
-            case CDATA:          
-                sll_insert (first, node->FIDATA);
-                break;
-            case UIDATA:
-            case UCDATA:
-                sll_insert (first, node->FUIDATA);
-                break;
-            case VPDATA:
-                sll_insert (first, node->FVPDATA);
-                break;
-            case FPDATA:
-                sll_insert (first, node->FFPDATA);
-                break;
-            case LDATA:
-            case LLDATA:
-            case ULDATA:
-            case ULLDATA:
-                /* todo */
-                break;
-            }
-        node = node->next;
-        }
-    return LL_ERR_OK;
-    }
-
-/*******************************************************************************
-* sll_insert - insert an element into the SLL 
-*
-* RETURNS: LL_ERR_OK if successful
-*/
-
 LL_ERR_E sll_insert (SLL_T* head, ...)
     {
     SLL_NODE* newNode;
@@ -348,15 +286,13 @@ LL_ERR_E sll_insert (SLL_T* head, ...)
     return LL_ERR_OK;
     }
 
-/*******************************************************************************
- * sll_find - find a SLL node with element 
- *
- *
- * ARGUMENTS: 
- *            
- * RETURNS: 
+/**
+ * @brief find the node with the given element value
+ * 
+ * @param[in] sll linked-list
+ * @param[in] ... item value of the node that needs to be found
+ * @return SLL_NODE* - the node
  */
-
 SLL_NODE* sll_find (SLL_T* sll, ...)
     {
     SLL_NODE* node;
@@ -405,15 +341,13 @@ SLL_NODE* sll_find (SLL_T* sll, ...)
     return NULL;
     }
 
-/*******************************************************************************
- * sll_find_prev - find the node previous to the one given
- *
- *
- * ARGUMENTS: 
- *            
- * RETURNS: 
+/**
+ * @brief find the node previous to the one given
+ * 
+ * @param[in] sll linked-list
+ * @param[in] ... item to find previous node of
+ * @return SLL_NODE* - the previous node
  */
-
 SLL_NODE* sll_find_prev (SLL_T* sll, ...)
     {
     SLL_NODE* node;
@@ -664,11 +598,18 @@ SLL_T* sll_new (NODE_DATA_TYPE_E data_type, SLL_ITER_FUNC iterator,
  */
 void skl_iter (SKL_T* skl)   
 {
-   SKL_NODE* node = skl->head->nexts[0];
-   while (NULL != node)
+   SKL_NODE* node;
+   int idx;
+   
+   for (idx = 0; idx < skl->cur_level; idx++)
    {
-      node = node->nexts[0];
-      fprintf (stdout, "%ld ", node->FIDATA);
+      fprintf (stdout, "[%5s] level %d nodes\n", "skl", idx+1);
+      node = skl->head->nexts[idx];
+      while (NULL != node)
+      {
+         fprintf (stdout, "%ld[level=%d]\n", node->FIDATA, node->level);
+         node = node->nexts[idx];
+      }
    }
 }
 
@@ -679,7 +620,7 @@ void skl_iter (SKL_T* skl)
  */
 static inline unsigned int skl_random_level (unsigned char max_level)
 {
-   unsigned int level = 0;
+   unsigned int level = 1;
    
    while (dslib_random(1) < DEFAULT_SKL_P && level < max_level)
       level = level + 1;
@@ -736,8 +677,8 @@ LL_ERR_E skl_delete_idata (SKL_T* skl, int item)
    SKL_NODE* temp;
    SKL_NODE* update[DEFAULT_SKL_MAX_LEVEL] = {0};
    unsigned char cur_level_idx = skl->cur_level-1;
-   unsigned int idx;
-   
+   int idx;
+
    temp = skl->head;
    for (idx = cur_level_idx; idx >= 0; idx--)
    {
@@ -745,8 +686,8 @@ LL_ERR_E skl_delete_idata (SKL_T* skl, int item)
          temp = temp->nexts[idx];         
       update[idx] = temp;      
    }
-      
-   if (temp->FIDATA != item)
+
+   if (temp->nexts[0]->FIDATA != item)
       return LL_ERR_ELE_NOT_FOUND;
 
    for (idx = 0; idx < (skl->cur_level-1); idx--)
@@ -802,14 +743,16 @@ LL_ERR_E skl_insert_idata (SKL_T* skl, int item)
    SKL_NODE* update[DEFAULT_SKL_MAX_LEVEL] = {0};
    unsigned char cur_level_idx = skl->cur_level-1;
    unsigned char level;
-   unsigned int idx;
-   
+   int idx;
+
    temp = skl->head;
    for (idx = cur_level_idx; idx >= 0; idx--)
    {
       while (temp->nexts[idx] != NULL && temp->nexts[idx]->FIDATA < item)
-         temp = temp->nexts[idx];         
-      update[idx] = temp;      
+      {
+         temp = temp->nexts[idx];
+      }
+      update[idx] = temp;
    }
       
    level = skl_random_level(skl->max_level);
@@ -824,7 +767,7 @@ LL_ERR_E skl_insert_idata (SKL_T* skl, int item)
       skl->cur_level = level;
    }
    
-   for (idx = 0; idx < (level-1); idx++)
+   for (idx = 0; idx < level; idx++)
    {
       new_node->nexts[idx] = update[idx]->nexts[idx];
       update[idx]->nexts[idx] = new_node;
@@ -862,7 +805,6 @@ SKL_T* skl_new (NODE_DATA_TYPE_E data_type, unsigned char max_level,
    skl->max_level = max_level;
 
    skl->head = skl_new_node (DEFAULT_SKL_MAX_LEVEL);
-   
    skl->data_type = data_type;
    
    if (iterator)
@@ -873,3 +815,4 @@ SKL_T* skl_new (NODE_DATA_TYPE_E data_type, unsigned char max_level,
       skl->preiterator = pre;
    return skl;
 }
+#undef DEBUG

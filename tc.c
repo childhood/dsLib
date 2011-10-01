@@ -21,10 +21,12 @@
 #include <tc_graph.h>
 #include <tc_heap.h>
 
+/* todo - signal handler to flush buffers on seg fault */
 int main (int argc, char** argv)
 {
    //graph_main();
    //sll_main ();
+   tc_skl_main();
    //isort_main ();
    //queue_main ();
    //matrix_main();
@@ -42,8 +44,7 @@ int main (int argc, char** argv)
    tc_dj_iii_main();
    tc_dj_iv_main();
    tc_dj_v_main();
-   */
    heapsort_main();
-   
+   */   
    return 0;
 }

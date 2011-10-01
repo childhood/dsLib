@@ -113,7 +113,7 @@ void* data
    if (q->cur_size == q->max_size)
       return Q_ERR_OVERFLOW;
 
-   if (SLL_ERR_OK != sll_insert (q->q, data))
+   if (LL_ERR_OK != sll_insert (q->q, data))
    {
       return Q_ERR_ERR;
    }

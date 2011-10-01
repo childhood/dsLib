@@ -126,4 +126,6 @@ SLL_NODE*       sll_first_get (SLL_T* sll);
 SLL_NODE*       sll_last_get (SLL_T* sll);
 /* remove the first element in the SLL */
 SLL_NODE*       sll_remove_first (SLL_T* sll);
+/* expand a linked list */
+LL_ERR_E        sll_concat (SLL_T* first, SLL_T* second);
 #endif /* !defined DS_SLL_H */
