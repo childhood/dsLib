@@ -23,6 +23,36 @@
 #define DEFAULT_SKL_P           (0.5)
 #define DEFAULT_SKL_START_LEVEL (1)
 
+#define ARG_TO_DATA(ll, data)                                           \
+   do {                                                                 \
+      va_list ap;                                                       \
+      va_start (ap, ll);                                                \
+      switch (ll->data_type)                                            \
+      {                                                                 \
+         case IDATA:                                                    \
+         case CDATA:                                                    \
+            data.idata = va_arg (ap, int);                              \
+            break;                                                      \
+         case UIDATA:                                                   \
+         case UCDATA:                                                   \
+            data.uidata = va_arg (ap, unsigned int);                    \
+            break;                                                      \
+         case VPDATA:                                                   \
+            data.vpdata = va_arg (ap, void*);                           \
+            break;                                                      \
+         case FPDATA:                                                   \
+            data.fpdata = va_arg (ap, FUNCPTR2_T);                      \
+            break;                                                      \
+         case LDATA:                                                    \
+         case LLDATA:                                                   \
+         case ULDATA:                                                   \
+         case ULLDATA:                                                  \
+            /* todo */                                                  \
+            break;                                                      \
+      }                                                                 \
+      va_end (ap);                                                      \
+   }while (0)                                                                     
+   
 /* single linked list node */
 typedef struct _sllnode
    {
@@ -96,21 +126,21 @@ typedef struct _dllnode
     }DLL_NODE;
 
 typedef enum {
-   LL_ERR_ERROR_HIGH = -512, /* fencepost */
-   LL_ERR_ELE_NOT_FOUND, /* element not found in the list */
-   LL_ERR_MALLOC_FAIL,
-   LL_ERR_ERR = -1, /* generic operational error */
-   LL_ERR_OK = 0 /* routine returned without any errors */
-} LL_ERR_E;
+   ERR_LL_ERROR_HIGH = -512, /* fencepost */
+   ERR_LL_ELE_NOT_FOUND, /* element not found in the list */
+   ERR_LL_MALLOC_FAIL,
+   ERR_LL_ERR = -1, /* generic operational error */
+   ERR_LL_OK = 0 /* routine returned without any errors */
+} ERR_LL_E;
 
 
 /* Public API */
 /* insert an element into the SLL */
-LL_ERR_E        sll_insert (SLL_T* head, ...);
+ERR_LL_E        sll_insert (SLL_T* head, ...);
 /* insert N element into the SLL, all of the same types */
-LL_ERR_E        sll_ninsert (SLL_T* head, unsigned int num, ...);
+ERR_LL_E        sll_ninsert (SLL_T* head, unsigned int num, ...);
 /* delete an element from the SLL */
-LL_ERR_E        sll_delete (SLL_T* sll, ...);
+ERR_LL_E        sll_delete (SLL_T* sll, ...);
 /* create a new SLL */
 SLL_T*          sll_new (NODE_DATA_TYPE_E data_type, SLL_ITER_FUNC iterator,
                          FUNCPTR2_T pre, FUNCPTR2_T post);
@@ -127,5 +157,11 @@ SLL_NODE*       sll_last_get (SLL_T* sll);
 /* remove the first element in the SLL */
 SLL_NODE*       sll_remove_first (SLL_T* sll);
 /* expand a linked list */
-LL_ERR_E        sll_concat (SLL_T* first, SLL_T* second);
+ERR_LL_E        sll_concat (SLL_T* first, SLL_T* second);
+/* find node with the specified element value */
+SLL_NODE* sll_find (SLL_T* sll, ...);
+/* create a new skip list */
+SKL_T* skl_new (NODE_DATA_TYPE_E data_type, unsigned char max_level,
+                SKL_ITER_FUNC iterator, FUNCPTR2_T pre, FUNCPTR2_T post);
+
 #endif /* !defined DS_SLL_H */

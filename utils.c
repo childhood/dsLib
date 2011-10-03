@@ -18,15 +18,17 @@
  * See README and COPYING for more details.
  */
 
-
+#undef DEBUG
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <time.h>
 
-#define DSLIB_UTILS_UT
-
+#include <config.h>
+#include <ds_types.h>
+#include <utils.h>
 
 /**
  * @brief seed random number generator
@@ -69,12 +71,84 @@ void dslib_srandom (void)
  * 
  * @return n.a.
  */
-
 unsigned long dslib_random (unsigned int max)
 {
    return (random()%(max+1));
 }
 
-#ifdef DSLIB_UTILS_UT
 
-#endif
+/**
+ * @brief generate random number
+ * 
+ * @return A handle to the recorded time if successful, NULL if operation failed
+ */
+void* dslib_record_time (void)
+    {
+    struct timespec* tp = malloc (sizeof (struct timespec));
+
+    tp->tv_sec = 0;
+    tp->tv_nsec = 0;
+    
+    if (-1 == clock_gettime (CLOCK_MONOTONIC, tp))
+        return NULL;
+
+    return tp;
+    }
+
+/**
+ * @brief calculate the difference in nanoseconds between two time values
+ *
+ * @param[in] start_time
+ * @param[in] end_time 
+ * @param[out] diff time difference in nanoseconds
+ * @return difference in nanoseconds
+ */
+ERR_UTILS_E dslib_time_diff (void* start_time, void* end_time, unsigned long* diff)
+    {
+    unsigned long ldiff;
+    struct timespec* endt = (struct timespec*)end_time;
+    struct timespec* startt = (struct timespec*)start_time;
+
+    DEBUG_PRINT ("DSLIB[utils]: endt->sec=%ld endt->nsec=%ld\n", endt->tv_sec, endt->tv_nsec);
+    DEBUG_PRINT ("DSLIB[utils]: start->sec=%ld start->nsec=%ld\n", startt->tv_sec, startt->tv_nsec);
+    if (endt->tv_sec > startt->tv_sec)
+        {
+        if (endt->tv_nsec > startt->tv_nsec)
+            {
+            ldiff = endt->tv_nsec - startt->tv_nsec;
+            ldiff = ldiff + (endt->tv_sec - startt->tv_sec)*NANOSECONDS;
+            }
+        else if (endt->tv_nsec < startt->tv_nsec)
+            {
+            ldiff = (endt->tv_nsec - 1) - startt->tv_nsec;
+            ldiff = ldiff + ((endt->tv_sec + NANOSECONDS)- startt->tv_sec)*NANOSECONDS;
+            }
+        else
+            {
+            ldiff = 0;
+            }        
+        }
+    else if (endt->tv_sec < startt->tv_sec)        
+        {
+        return ERR_UTILS_INVALID_PARAM;
+        }
+    else if (endt->tv_sec == startt->tv_sec)
+        {
+        if (endt->tv_nsec > startt->tv_nsec)
+            {
+            ldiff = endt->tv_nsec - startt->tv_nsec;
+            }
+        else if (endt->tv_nsec < startt->tv_nsec)
+            {
+            return ERR_UTILS_INVALID_PARAM;
+            }
+        else
+            {
+            ldiff = 0;
+            }        
+        }
+
+    *diff = ldiff;
+    return ERR_UTILS_OK;
+    }
+#undef DEBUG

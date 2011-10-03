@@ -25,8 +25,8 @@
 int main (int argc, char** argv)
 {
    //graph_main();
-   //sll_main ();
-   tc_skl_main();
+   tc_sll_main ();
+   //tc_skl_main();
    //isort_main ();
    //queue_main ();
    //matrix_main();

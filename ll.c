@@ -18,6 +18,11 @@
  * See README and COPYING for more details.
  */
 
+/* todo
+ * . ll find routines should not really be taking a variable number of arguments
+ * . sll should have option to insert and delete in a sorted manner.
+ */
+
 #define DEBUG
 #include <stdio.h>
 #include <stdlib.h>
@@ -79,7 +84,7 @@ SLL_T* sll
       }
       node = node->next;
    }
-   return LL_ERR_OK;
+   return ERR_LL_OK;
 }
 
 /*******************************************************************************
@@ -196,15 +201,15 @@ SLL_NODE* sll_prev_get
  *
  * @param[in] first the first list
  * @param[in] second the second list
- * @return LL_ERR_E
+ * @return ERR_LL_E
  */
-LL_ERR_E sll_concat (SLL_T* first, SLL_T* second)
+ERR_LL_E sll_concat (SLL_T* first, SLL_T* second)
     {
     SLL_NODE* node;
 
     node = second->lhead;
     if (first->data_type != second->data_type)
-        return LL_ERR_ERR;
+        return ERR_LL_ERR;
     while (node)
         {
         switch (first->data_type)
@@ -232,7 +237,7 @@ LL_ERR_E sll_concat (SLL_T* first, SLL_T* second)
             }
         node = node->next;
         }
-    return LL_ERR_OK;
+    return ERR_LL_OK;
     }
 
 /**
@@ -240,54 +245,30 @@ LL_ERR_E sll_concat (SLL_T* first, SLL_T* second)
  * 
  * @param[in] sll linked-list
  * @param[in] ... item to insert
- * @return LL_ERR_E
+ * @return ERR_LL_E
  */
-LL_ERR_E sll_insert (SLL_T* head, ...)
+ERR_LL_E sll_insert (SLL_T* head, ...)
     {
     SLL_NODE* newNode;
-    va_list ap;
 
     newNode = (SLL_NODE*)malloc (sizeof (SLL_NODE));
     if (NULL == newNode)
-        return LL_ERR_MALLOC_FAIL;    
+        return ERR_LL_MALLOC_FAIL;    
     newNode->next = NULL;
 
-    va_start (ap, head);
-    switch (head->data_type)
-    {
-       case IDATA:
-       case CDATA:          
-          newNode->FIDATA = va_arg (ap, int);
-          break;
-       case UIDATA:
-       case UCDATA:
-          newNode->FUIDATA = va_arg (ap, unsigned int);
-          break;
-       case VPDATA:
-          newNode->FVPDATA = va_arg (ap, void*);
-          break;
-       case FPDATA:
-          newNode->FFPDATA = va_arg (ap, FUNCPTR2_T);
-          break;                
-    case LDATA:
-    case LLDATA:
-    case ULDATA:
-    case ULLDATA:
-        /* todo */
-        break;
-    }
+    ARG_TO_DATA(head, newNode->item);
 
     if (head->lhead == NULL)
         head->lhead = newNode;
     if (head->ltail != NULL)
         head->ltail->next = newNode;
     head->ltail = newNode;
-    va_end (ap);
-    return LL_ERR_OK;
+
+    return ERR_LL_OK;
     }
 
 /**
- * @brief find the node with the given element value
+ * @brief find the node with the given element value in this linked list
  * 
  * @param[in] sll linked-list
  * @param[in] ... item value of the node that needs to be found
@@ -297,34 +278,34 @@ SLL_NODE* sll_find (SLL_T* sll, ...)
     {
     SLL_NODE* node;
     SLL_NODE* prev;
-    va_list ap;
+    NODE_DATA_T data;
     
     if (NULL == sll)
         return NULL;
     node = sll->lhead;
     prev = NULL;
-    
-    va_start (ap, sll);
+
+    ARG_TO_DATA(sll, data);   
     while (node)
         {
         switch (sll->data_type)
             {
             case IDATA:
-            case CDATA:            
-                if (node->FIDATA == va_arg (ap, int))
+            case CDATA:
+                if (node->FIDATA == data.idata)
                     return node;
                 break;
             case UIDATA:
             case UCDATA:            
-                if (node->FUIDATA == va_arg (ap, unsigned int))
+                if (node->FUIDATA == data.uidata)
                     return node;
                 break;
             case VPDATA:
-                if (node->FVPDATA == va_arg (ap, void*))
+                if (node->FVPDATA == data.vpdata)
                     return node;
                 break;
             case FPDATA:
-                if (node->FFPDATA == va_arg (ap, FUNCPTR2_T))
+                if (node->FFPDATA == data.fpdata)
                     return node;
                 break;
             case LDATA:
@@ -337,7 +318,6 @@ SLL_NODE* sll_find (SLL_T* sll, ...)
         prev = node;
         node = node->next;
         }
-    va_end (ap);
     return NULL;
     }
 
@@ -410,45 +390,21 @@ SLL_NODE* sll_find_prev (SLL_T* sll, ...)
  * 
  * @param[in] head head of the sll
  * @param[in] item item to be deleted
- * @return LL_ERR_E
+ * @return ERR_LL_E
  */
-LL_ERR_E sll_delete (SLL_T* sll, ...)
+ERR_LL_E sll_delete (SLL_T* sll, ...)
     {
     SLL_NODE* node;
     SLL_NODE* prev;
-    va_list ap;
     int found = 0;
     NODE_DATA_T data;
     
     if (NULL == sll)
-        return LL_ERR_MALLOC_FAIL;
+        return ERR_LL_MALLOC_FAIL;
     node = sll->lhead;
     prev = NULL;
-    
-    va_start (ap, sll);
-    switch (sll->data_type)
-        {
-        case IDATA:
-        case CDATA:         
-            data.idata = va_arg (ap, int);
-            break;
-        case UIDATA:
-        case UCDATA:
-            data.uidata = va_arg (ap, unsigned int);
-            break;
-        case VPDATA:
-            data.vpdata = va_arg (ap, void*);
-            break;
-        case FPDATA:
-            data.fpdata = va_arg (ap, FUNCPTR2_T);
-            break;
-        case LDATA:
-        case LLDATA:
-        case ULDATA:
-        case ULLDATA:
-            /* todo */
-            break;
-        }
+
+    ARG_TO_DATA(sll, data);
    
     while (node)
         {
@@ -489,13 +445,12 @@ LL_ERR_E sll_delete (SLL_T* sll, ...)
             if (sll->ltail == node)
                 sll->ltail = prev;            
             free (node);
-            return LL_ERR_OK;
+            return ERR_LL_OK;
             }
         prev = node;
         node = node->next;
         }
-    va_end (ap);
-    return LL_ERR_OK;   
+    return ERR_LL_OK;   
     }
 
 
@@ -594,7 +549,7 @@ SLL_T* sll_new (NODE_DATA_TYPE_E data_type, SLL_ITER_FUNC iterator,
 /**
  * @brief 
  * 
- * @return LL_ERR_E
+ * @return ERR_LL_E
  */
 void skl_iter (SKL_T* skl)   
 {
@@ -616,7 +571,7 @@ void skl_iter (SKL_T* skl)
 /**
  * @brief return a random level for a new skip list node
  * 
- * @return LL_ERR_E
+ * @return ERR_LL_E
  */
 static inline unsigned int skl_random_level (unsigned char max_level)
 {
@@ -641,10 +596,37 @@ static inline SKL_NODE* skl_new_node (unsigned char level)
       return NULL;
    node->nexts = malloc (level * sizeof (SKL_NODE*));
    for (idx = 0; idx < level; idx++)
-      node->nexts[idx] = NULL;
+       node->nexts[idx] = NULL;
    
    return node;
 }
+
+/**
+ * @brief find the node with the given element value in this linked list
+ * 
+ * @param[in] sll linked-list
+ * @param[in] ... item value of the node that needs to be found
+ * @return SLL_NODE* - the node
+ */
+SKL_NODE* skl_find_idata (SKL_T* skl, int item)
+    {
+    SKL_NODE* node;
+    unsigned char cur_level_idx = skl->cur_level-1;
+    int idx;
+    
+    node = skl->head;
+    for (idx = cur_level_idx; idx >= 0; idx--)
+        {
+        while (node->nexts[idx] != NULL && node->nexts[idx]->FIDATA < item)
+            node = node->nexts[idx];         
+        }
+    
+    node = node->nexts[0];
+    
+    if (node && node->FIDATA == item)
+        return node;
+    return NULL;
+    }
 
 /**
  * @brief delete an element from the skip list
@@ -670,42 +652,43 @@ static inline SKL_NODE* skl_new_node (unsigned char level)
  *
  * @param[in] head list to insert item into 
  * @param[in] item the item to insert
- * @return LL_ERR_E
+ * @return ERR_LL_E
  */
-LL_ERR_E skl_delete_idata (SKL_T* skl, int item)
-{
-   SKL_NODE* temp;
-   SKL_NODE* update[DEFAULT_SKL_MAX_LEVEL] = {0};
-   unsigned char cur_level_idx = skl->cur_level-1;
-   int idx;
-
-   temp = skl->head;
-   for (idx = cur_level_idx; idx >= 0; idx--)
-   {
-      while (temp->nexts[idx] != NULL && temp->nexts[idx]->FIDATA < item)
-         temp = temp->nexts[idx];         
-      update[idx] = temp;      
-   }
-
-   if (temp->nexts[0]->FIDATA != item)
-      return LL_ERR_ELE_NOT_FOUND;
-
-   for (idx = 0; idx < (skl->cur_level-1); idx--)
-   {
-      if (update[idx]->nexts[idx] != temp)
-         break;
-      update[idx]->nexts[idx] = temp->nexts[idx];
-   }
-
-   for (idx = 0; idx < temp->level-1; idx++)
-      free (temp->nexts[idx]);
-   free (temp);
-
-   while (skl->cur_level > 1 && skl->head->nexts[skl->cur_level] == NULL)
-      skl->cur_level = skl->cur_level - 1;
-   
-   return LL_ERR_OK;
-}
+ERR_LL_E skl_delete_idata (SKL_T* skl, int item)
+    {
+    SKL_NODE* temp;
+    SKL_NODE* update[DEFAULT_SKL_MAX_LEVEL] = {0};
+    unsigned char cur_level_idx = skl->cur_level-1;
+    int idx;
+    
+    temp = skl->head;
+    for (idx = cur_level_idx; idx >= 0; idx--)
+        {
+        while (temp->nexts[idx] != NULL && temp->nexts[idx]->FIDATA < item)
+            temp = temp->nexts[idx];         
+        update[idx] = temp;
+        }
+    
+    temp = temp->nexts[0];
+    if (temp->FIDATA != item)
+        return ERR_LL_ELE_NOT_FOUND;
+    
+    for (idx = 0; idx < (skl->cur_level); idx++)
+        {
+        if (update[idx]->nexts[idx] != temp)
+            break;
+        update[idx]->nexts[idx] = temp->nexts[idx];
+        }
+    
+    for (idx = 0; idx < temp->level-1; idx++)
+        free (temp->nexts[idx]);
+    free (temp);
+    
+    while (skl->cur_level > 1 && skl->head->nexts[skl->cur_level-1] == NULL)
+        skl->cur_level = skl->cur_level - 1;
+    
+    return ERR_LL_OK;
+    }
 
 /**
  * @brief insert an element into the skip list
@@ -734,9 +717,9 @@ LL_ERR_E skl_delete_idata (SKL_T* skl, int item)
  *
  * @param[in] head list to insert item into 
  * @param[in] item the item to insert
- * @return LL_ERR_E
+ * @return ERR_LL_E
  */
-LL_ERR_E skl_insert_idata (SKL_T* skl, int item)
+ERR_LL_E skl_insert_idata (SKL_T* skl, int item)
 {
    SKL_NODE* new_node;
    SKL_NODE* temp;
@@ -773,8 +756,26 @@ LL_ERR_E skl_insert_idata (SKL_T* skl, int item)
       update[idx]->nexts[idx] = new_node;
    }
 
-   return LL_ERR_OK;
+   return ERR_LL_OK;
 }
+
+/**
+ *
+ */
+ERR_LL_E skl_destroy (SKL_T* skl, ...)
+    {
+    int idx=0;
+    SKL_NODE* node;
+    SKL_NODE* prev;
+    
+    node = skl->head->nexts[0];
+    while (NULL != node)
+        {
+        node = node->nexts[idx];
+        free (prev);
+        prev = node;
+        }
+    }
 
 /**
  * @brief create a new skip list
@@ -790,29 +791,28 @@ LL_ERR_E skl_insert_idata (SKL_T* skl, int item)
 SKL_T* skl_new (NODE_DATA_TYPE_E data_type, unsigned char max_level,
                 SKL_ITER_FUNC iterator, FUNCPTR2_T pre, FUNCPTR2_T post)
 {
-   SKL_T* skl;
-   unsigned char idx;
-
-   if (max_level == 0)
-      return NULL;
+  SKL_T* skl;
+  
+  if (max_level == 0)
+    return NULL;
+  
+  skl = (SKL_T*)malloc (sizeof (SKL_T));
+  if (NULL == skl)
+    return NULL;
    
-   skl = (SKL_T*)malloc (sizeof (SKL_T));
-   if (NULL == skl)
-      return NULL;
-   
-   skl->total_elements = 0;
-   skl->cur_level = DEFAULT_SKL_START_LEVEL;
-   skl->max_level = max_level;
-
-   skl->head = skl_new_node (DEFAULT_SKL_MAX_LEVEL);
-   skl->data_type = data_type;
-   
+  skl->total_elements = 0;
+  skl->cur_level = DEFAULT_SKL_START_LEVEL;
+  skl->max_level = max_level;
+  
+  skl->head = skl_new_node (DEFAULT_SKL_MAX_LEVEL);
+  skl->data_type = data_type;
+  
    if (iterator)
-      skl->iterator = iterator;
+     skl->iterator = iterator;
    if (post)
-      skl->postiterator = post;
+     skl->postiterator = post;
    if (pre)
-      skl->preiterator = pre;
+     skl->preiterator = pre;
    return skl;
 }
 #undef DEBUG
